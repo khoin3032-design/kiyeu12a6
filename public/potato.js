@@ -52,7 +52,10 @@ function local(q){
     s = ALIAS[s] || s;
     if (s.length >= 2) {
       let r = lop.filter(p => norm(p.diem + ' ' + p.truong).includes(s));
-              if (r.length) return `Danh sách các bạn khớp với từ khóa "${esc(s)}":<br>` + r.map(p => `• ${nameLink(p)}${p.truong ? ` (\${esc(p.truong)})` : ''}`).join('<br>');
+             if (r.length) {
+  return `Danh sách các bạn khớp với từ khóa "${esc(s)}":<br>` +
+    r.map(p => `• ${nameLink(p)}${p.truong ? ` (${esc(p.truong)})` : ''}`).join('<br>');
+}
 
     }
   }
