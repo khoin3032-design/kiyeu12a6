@@ -1,5 +1,5 @@
 /* =====================================================================
-   POTATO 🥔 — Trợ lý chat hoàn chỉnh cho lớp 12A6 (Đầy đủ giao diện và bộ não)
+   POTATO 🥔 — Phiên bản giao diện CHỦ ĐỀ KHOAI TÂY VÀNG CUTE HOÀN CHỈNH
    ===================================================================== */
 (function(){
 const AI_ENDPOINT = '/api/chat';
@@ -7,8 +7,8 @@ const norm=s=>String(s).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/
 const SHOW_BD=typeof HIEN_NGAY_SINH==='undefined'||HIEN_NGAY_SINH;
 const link=(h,t)=>`<a href="${h}" class="pt-link" onclick="document.getElementById('pt-panel').classList.remove('open')">${esc(t)}</a>`;
 const hA=m=>link('#'+m.id,m.title),hT=t=>link('#'+t.id,t.ten);
-const first=p=>p.ten.split(' ').slice(-1)[0];
-const nameLink=p=>`<b>${esc(p.ten)}</b>`;
+const first=p=>p.ten.split(' ').slice(-1);
+const nameLink=p=>`<b style="color:#B25E00">${esc(p.ten)}</b>`;
 const ALIAS={gtvt:'giao thong van tai',bk:'bach khoa',neu:'kinh te quoc dan',hust:'bach khoa',ptit:'buu chinh vien thong',ftu:'ngoai thuong',hanu:'ha noi',nhan:'nhan'};
 const JOKES=["Tại sao khoai tây không đi họp lớp? Vì sợ bị… nghiền nát ở phần phát biểu 🥔","Điểm giống nhau giữa khoai tây và học sinh 12A6? Càng bị ‘ép’ càng… giòn ✨","Khoai tây hỏi khoai lang: ‘Sao cậu đỏ mặt vậy?’ — ‘Vì tớ vừa được nướng khen!’ 🍠"];
 
@@ -33,16 +33,16 @@ function findPeople(t,intent){
 }
 
 function local(q){
-  const t=norm(q).replace(/[?!.,;:"“”]/g,' ').replace(/\s+/g,' ').trim();
-  if(/^(hi|hello|hey|alo|chao|xin chao|yo)\b/.test(t))return "Chào cậu! Mình là <b>Potato</b> 🥔 — hóa thân của "+esc(POTATO_LA)+". Cậu muốn hỏi về bạn nào trong lớp, trường đại học, sinh nhật hay album?";
-  if(/(ban la ai|ten gi|potato la|ai tao ra|ai la potato)/.test(t))return `Mình là <b>Potato</b> 🥔 — chatbot thông thái biết hết về 12A6!`;
-  if(/(cam on|thanks|thank)/.test(t))return "Không có gì nha! Khoai tây luôn ở đây 🥔💛";
+  const t=norm(q).replace(/[?!.,;:"擺]/g,' ').replace(/\s+/g,' ').trim();
+  if(/^(hi|hello|hey|alo|chao|xin chao|yo)\b/.test(t))return "Chào cậu! Mâm khoai tây nướng đến đây 🥔 Cậu muốn hỏi về bạn nào trong lớp 12A6 thế?";
+  if(/(ban la ai|ten gi|potato la|ai tao ra|ai la potato)/.test(t))return `Tớ là siêu cấp trợ lý <b>Potato</b> 🥔 — một củ khoai tây siêu thông thái của 12A6!`;
+  if(/(cam on|thanks|thank)/.test(t))return "Hì hì không có gì nha! Khoai tây luôn thương cậu 💛";
   if(/(joke|dua|cuoi|chuyen vui|hai huoc)/.test(t))return JOKES[Math.floor(Math.random()*JOKES.length)];
   
   const intent=/(la ai|ai la|thong tin|nguoi nhu the nao|tinh cach|hoc truong|truong nao|hoc dai hoc)/.test(t);
   const ppl=findPeople(t,intent);
   if(ppl.length===1)return personCard(ppl[0]);
-  if(ppl.length>1)return `Có ${ppl.length} bạn khớp:<br><br>`+ppl.slice(0,4).map(personCard).join('<br><br>');
+  if(ppl.length>1)return `Úi, có tận ${ppl.length} củ khoai tây trùng tên nè, để tớ liệt kê nha:<br><br>`+ppl.slice(0,4).map(personCard).join('<br><br>');
 
   if (/(^| )ai |nhung ban|danh sach|bao nhieu ban|bao nhieu nguoi|ban nao/.test(t)) {
     let s = t.replace(/\b(ai|nhung|cac|ban|nguoi|nao|la|o|hoc|truong|dai hoc|co|danh sach|liet ke|cho|toi|biet|bao nhieu|trong lop|lop)\b/g, ' ').replace(/\s+/g, ' ').trim();
@@ -52,23 +52,83 @@ function local(q){
       if (r.length) return `Danh sách các bạn khớp với từ khóa "${esc(s)}":<br>` + r.map(p => `• ${nameLink(p)}${p.truong ? ` (\${esc(p.truong)})` : ''}`).join('<br>');
     }
   }
-  return "Potato 🥔 chưa hiểu câu này lắm. Cậu thử hỏi dạng: 'Nguyễn Anh Khôi là ai', 'ai đá bóng hay', hoặc 'ai học FPT' xem sao nha!";
+  return "Khoai tây 🥔 chưa hiểu ý cậu lắm... Thử hỏi tớ: 'Nguyễn Anh Khôi là ai', 'ai đá bóng hay', hoặc 'ai học FPT' xem nèoo!";
 }
 
-/* ---------- HTML/CSS Tạo giao diện nút bấm và khung chat ---------- */
+/* ---------- POTATO CUTE THEME CSS ---------- */
 const css = `
-  #pt-launcher { position:fixed; bottom:20px; right:20px; width:60px; height:60px; background:#E9DFCB; border:3px solid #D8452F; border-radius:50%; cursor:pointer; box-shadow:0 4px 12px rgba(0,0,0,0.15); display:flex; align-items:center; justify-content:center; font-size:30px; z-index:9999; transition:transform 0.2s; }
-  #pt-launcher:hover { transform:scale(1.05); }
-  #pt-panel { position:fixed; bottom:90px; right:20px; width:360px; height:480px; background:#fff; border:2px solid #D8452F; border-radius:16px; box-shadow:0 8px 24px rgba(0,0,0,0.2); display:none; flex-direction:column; overflow:hidden; z-index:9999; font-family:sans-serif; }
-  #pt-panel.open { display:flex; }
-  #pt-header { background:#D8452F; color:#fff; padding:12px; font-weight:bold; display:flex; justify-content:between; align-items:center; }
-  #pt-chatbox { flex:1; padding:12px; overflow-y:auto; background:#FDFBF7; font-size:14px; }
-  .pt-msg { margin-bottom:10px; max-width:80%; padding:8px 12px; border-radius:12px; line-height:1.4; }
-  .pt-bot { background:#E9DFCB; color:#222; align-self:flex-start; border-bottom-left-radius:2px; }
-  .pt-user { background:#D8452F; color:#fff; align-self:flex-end; border-bottom-right-radius:2px; margin-left:auto; }
-  #pt-input-area { padding:8px; border-top:1px solid #eee; display:flex; background:#fff; }
-  #pt-input { flex:1; border:1px solid #ccc; padding:8px; border-radius:20px; outline:none; font-size:14px; padding-left:14px; }
-  #pt-send { background:#D8452F; color:#fff; border:none; padding:6px 14px; margin-left:6px; border-radius:20px; cursor:pointer; font-weight:bold; }
+  #pt-launcher { 
+    position:fixed; bottom:25px; right:25px; width:65px; height:65px; 
+    background:#FFD043; border:3.5px solid #6E4711; border-radius:50%; 
+    cursor:pointer; box-shadow:0 8px 24px rgba(110,71,17,0.25); 
+    display:flex; align-items:center; justify-content:center; 
+    font-size:32px; z-index:9999; user-select:none;
+    transition:all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  }
+  #pt-launcher:hover { 
+    transform: scale(1.15) rotate(-10deg); 
+    background:#FFC107;
+    box-shadow:0 12px 28px rgba(110,71,17,0.4); 
+  }
+  
+  #pt-panel { 
+    position:fixed; bottom:105px; right:25px; width:380px; height:520px; 
+    background:#FFFDF6; border:4px solid #6E4711; border-radius:28px; 
+    box-shadow:0 16px 35px rgba(110,71,17,0.15); display:none; flex-direction:column; 
+    overflow:hidden; z-index:9999; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    transform: scale(0.9) translateY(30px); opacity:0; transition:all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.1);
+  }
+  #pt-panel.open { display:flex; transform: scale(1) translateY(0); opacity:1; }
+  
+  #pt-header { 
+    background:#FFD043; color:#6E4711; padding:16px 20px; 
+    font-weight:900; display:flex; justify-content:space-between; align-items:center;
+    border-bottom:3.5px solid #6E4711; font-size:16px;
+  }
+  
+  #pt-chatbox { 
+    flex:1; padding:18px; overflow-y:auto; 
+    background:#FFFDF6; display:flex; flex-direction:column; gap:14px;
+  }
+  
+  .pt-msg { 
+    max-width:82%; padding:11px 16px; border-radius:20px; 
+    line-height:1.5; font-size:14px; color:#4E3619;
+    box-shadow: 0 3px 6px rgba(110,71,17,0.04);
+    animation: pt-bounceIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.2) forwards;
+  }
+  @keyframes pt-bounceIn { from { opacity:0; transform:scale(0.85) translateY(10px); } to { opacity:1; transform:scale(1) translateY(0); } }
+  
+  .pt-bot { 
+    background:#FCEFCA; align-self:flex-start; 
+    border-top-left-radius:4px; border: 2px solid rgba(110,71,17,0.12);
+  }
+  .pt-user { 
+    background:#FFD043; align-self:flex-end; 
+    border-top-right-radius:4px; margin-left:auto;
+    border: 2px solid #6E4711; font-weight: 500;
+  }
+  
+  #pt-input-area { 
+    padding:12px 16px; border-top:3.5px solid #6E4711; 
+    display:flex; background:#FCEFCA; align-items:center; gap:8px;
+  }
+  #pt-input { 
+    flex:1; border:2.5px solid #6E4711; padding:10px 16px; 
+    border-radius:20px; outline:none; font-size:14px; 
+    background:#FFFDF6; color:#4E3619;
+  }
+  #pt-input::placeholder { color: #A0825B; }
+  
+  #pt-send { 
+    background:#FFD043; color:#6E4711; border:2.5px solid #6E4711; 
+    padding:8px 18px; border-radius:20px; cursor:pointer; 
+    font-weight:bold; font-size:14px; transition:all 0.2s;
+  }
+  #pt-send:hover { background:#FFC107; transform:scale(1.05); }
+  
+  .pt-link { color:#B25E00; text-decoration:underline; font-weight:bold; }
+  .pt-link:hover { color:#6E4711; }
 `;
 
 const style = document.createElement('style');
@@ -76,14 +136,17 @@ style.innerHTML = css;
 document.head.appendChild(style);
 
 const html = `
-  <div id="pt-launcher" title="Chat với Potato">🥔</div>
+  <div id="pt-launcher">🥔</div>
   <div id="pt-panel">
-    <div id="pt-header"><span>🥔 Potato Assistant</span><span id="pt-close" style="cursor:pointer;font-size:20px;">×</span></div>
+    <div id="pt-header">
+      <span>🥔 POTATO TRỢ LÝ THÔNG THÁI</span>
+      <span id="pt-close" style="cursor:pointer;font-size:26px;line-height:1; font-weight:900;">×</span>
+    </div>
     <div id="pt-chatbox">
-      <div class="pt-msg pt-bot">Chào bạn, mình là Potato 🥔! Bạn cần tra cứu thông tin gì về tập thể lớp 12A6 không?</div>
+      <div class="pt-msg pt-bot">Chào cậu, tớ là Potato đây! 🥔 💛 Tớ đã nhuộm vàng giao diện để sưởi ấm căn phòng chat của tụi mình rồi nè. Muốn hỏi gì về 12A6 cứ bảo tớ nhen! ✨</div>
     </div>
     <div id="pt-input-area">
-      <input type="text" id="pt-input" placeholder="Hỏi Potato điều gì đó...">
+      <input type="text" id="pt-input" placeholder="Nhập lời muốn hỏi củ khoai tây...">
       <button id="pt-send">Gửi</button>
     </div>
   </div>
@@ -93,7 +156,7 @@ const div = document.createElement('div');
 div.innerHTML = html;
 document.body.appendChild(div);
 
-/* ---------- Xử lý tương tác điều khiển bật tắt nút ---------- */
+/* ---------- Điều khiển & Hiệu ứng mượt mà ---------- */
 const launcher = document.getElementById('pt-launcher');
 const panel = document.getElementById('pt-panel');
 const closeBtn = document.getElementById('pt-close');
@@ -101,8 +164,20 @@ const input = document.getElementById('pt-input');
 const sendBtn = document.getElementById('pt-send');
 const chatbox = document.getElementById('pt-chatbox');
 
-launcher.onclick = () => panel.classList.toggle('open');
-closeBtn.onclick = () => panel.classList.remove('open');
+launcher.onclick = () => {
+  if(panel.classList.contains('open')) {
+    panel.classList.remove('open');
+    setTimeout(() => panel.style.display = 'none', 300);
+  } else {
+    panel.style.display = 'flex';
+    setTimeout(() => panel.classList.add('open'), 10);
+  }
+};
+
+closeBtn.onclick = () => {
+  panel.classList.remove('open');
+  setTimeout(() => panel.style.display = 'none', 300);
+};
 
 function appendMsg(text, isUser) {
   const msg = document.createElement('div');
@@ -112,25 +187,24 @@ function appendMsg(text, isUser) {
   chatbox.scrollTop = chatbox.scrollHeight;
 }
 
-async function handleSend() {
+function handleSend() {
   const val = input.value.trim();
   if(!val) return;
   input.value = '';
   appendMsg(esc(val), true);
 
-  // Tạo hiệu ứng chờ phản hồi
+  // Hiệu ứng "Potato đang lăn bánh suy nghĩ..."
   const thinking = document.createElement('div');
   thinking.className = 'pt-msg pt-bot';
-  thinking.innerHTML = 'Potato đang nghĩ... 🥔';
+  thinking.innerHTML = '<i>Khoai tây đang nảy số... 🥔 ⚡</i>';
   chatbox.appendChild(thinking);
   chatbox.scrollTop = chatbox.scrollHeight;
 
-  // Xử lý bộ não offline
   setTimeout(() => {
     thinking.remove();
     const reply = local(val);
     appendMsg(reply, false);
-  }, 600);
+  }, 500);
 }
 
 sendBtn.onclick = handleSend;
