@@ -72,20 +72,21 @@ function local(q){
   const hit=kw.find(([k])=>t.includes(k)),ms=hit&&!/(^| )ai /.test(t)?mem.filter(m=>norm(m.title+' '+m.cat).includes(hit[1])):[];
   if(ms.length)return ms.map(m=>`${hA(m)} — Lớp ${m.year}, ${esc(m.date)}, ${m.album.length} ảnh${m.video?` và 1 video dài ${vDur(m.video)}`:''}. ${esc(m.summary)}`).join('<br><br>');
   /* tìm theo trường / tính cách: "ai đá bóng hay", "ai học FPT", "bao nhiêu bạn học Phenikaa" */
-  if(/(^| )ai |nhung ban|danh sach|bao nhieu ban|bao nhieu nguoi|ban nao/.test(t)){
-    let s=t.replace(/\b(ai|nhung|cac|ban|nguoi|nao|la|o|hoc|truong|dai hoc|co|danh sach|liet ke|cho|toi|biet|bao nhieu|trong lop|lop)\b/g,' ').replace(/\s+/g,' ').trim();
-    s=ALIAS[s]||s;
-    const base=s.replace(/ (hay|nhat|gioi nhat)$/,'');
-    if(s.length>=2){let r=lop.filter(p=>norm(p.diem+' '+p.truong).includes(s));if(!r.length&&base!==s)r=lop.filter(p=>norm(p.diem+' '+p.truong).includes(base));
-      if(r.length)return `Có <b>${r.length}</b> bạn khớp “${esc(s)}”: ${r.slice(0,20).map(p=>esc(p.ten)).join(', ')}${r.length>20?'…':''}.`;
-      return `Mình chưa thấy ai khớp “${esc(s)}” trong dữ liệu 🥔.`;}
-    return `Lớp mình có <b>${lop.length}</b> bạn. Cậu thử hỏi cụ thể hơn, ví dụ “ai đá bóng hay?” hoặc “ai học FPT?”.`;
+    if (/(^| )ai |nhung ban|danh sach|bao nhieu ban|bao nhieu nguoi|ban nao/.test(t)) {
+    let s = t.replace(/\b(ai|nhung|cac|ban|nguoi|nao|la|o|hoc|truong|dai hoc|co|danh sach|liet ke|cho|toi|biet|bao nhieu|trong lop|lop)\b/g, ' ').replace(/\s+/g, ' ').trim();
+    s = ALIAS[s] || s;
+    const base = s.replace(/ (hay|nhat|gioi nhat)\$/, '');
+    if (s.length >= 2) {
+      let r = lop.filter(p => norm(p.diem + ' ' + p.truong).includes(s) || norm(p.diem + ' ' + p.truong).includes(base));
+      if (r.length) return `Danh sách các bạn khớp với từ khóa "${esc(s)}":<br>` + r.map(p => `• ${nameLink(p)}${p.truong ? ` (\${esc(p.truong)})` : ''}`).join('<br>');
+    }
   }
-  if(/(bao nhieu|tong).*(anh|album)|so luong anh/.test(t))return `Hiện có ${mem.length} album năm học (${mem.reduce((s,m)=>s+m.album.length,0)} ảnh), ${chuyendi.length} chuyến đi và ${daily.length} khung hình Daily.`;
-  if(/video|clip|phim/.test(t)){const vs=mem.filter(m=>m.video);return vs.length?vs.map(m=>`${esc(m.video.tieude||'Video')} (${vDur(m.video)||'?'}) — xem ở ${hA(m)}`).join('<br>'):'Hiện chưa có video nào trong trang.'}
-  if(/(album|ky niem|anh|xem)/.test(t))return "Các album: "+mem.map(m=>`${hA(m)} (Lớp ${m.year})`).join(' · ')+". Ngoài ra còn "+link('#cuon-phim','Daily')+" và "+link('#chuyen-di','Chuyến đi chơi')+".";
-  return "Potato chưa hiểu ý này 🥔. Cậu thử: <i>“Nguyễn Anh Khôi là ai?”</i>, <i>“ai đá bóng hay?”</i>, <i>“ai học FPT?”</i>, <i>“sinh nhật tháng 11”</i> hoặc <i>“có những album nào?”</i>.";
+  return "Potato 🥔 chưa hiểu câu này lắm. Cậu thử hỏi dạng: 'Nguyễn Anh Khôi là ai', 'ai đá bóng hay', 'ai học FPT', hoặc 'sinh nhật tháng 11' xem sao nha!";
 }
+
+window.localChatProcessor = local;
+})();
+
 
 /* ---------- Chế độ AI ---------- */
 function sys(){
@@ -166,4 +167,3 @@ $('pt-input').addEventListener('keydown',e=>{if(e.key==='Enter')send(e.target.va
 $('pt-chips').innerHTML=['Nguyễn Anh Khôi là ai?','Ai đá bóng hay?','Ai học FPT?','Sinh nhật tháng 11'].map(c=>`<button>${c}</button>`).join('');
 $('pt-chips').onclick=e=>{if(e.target.tagName==='BUTTON')send(e.target.textContent)};
 mode();add('pt-bot',"Chào bạn, mình là <b>Potato</b> 🥔! Mình biết kha khá về cả lớp 12A6. Hỏi mình về ai đó, trường đại học, sinh nhật hay album nào cũng được!");
-})();
