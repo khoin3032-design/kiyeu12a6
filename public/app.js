@@ -258,8 +258,9 @@ async function renderNotes() {
 
 // 2. Hàm xử lý gửi lời nhắn mới lên Cloudflare khi bạn học bấm nút "Dán lên"
 async function addNote() {
-  const nInput = $('gbN'), mInput = $('gbM');
-  const n = nInput.value.trim(), m = mInput.value.trim();
+ //  Dòng code sửa lại chuẩn xác:
+const n = $('gbN').value.trim(), m = $('gbM').value.trim();
+
   
   if (!n || !m) {
     if (!n) nInput.focus();
@@ -277,12 +278,13 @@ async function addNote() {
       body: JSON.stringify({ name: n, message: m, color: randomColor })
     });
 
-    if (res.ok) {
-      nInput.value = '';
-      mInput.value = '';
+       if (res.ok) {
+      $('gbN').value = '';
+      $('gbM').value = '';
       // Tải lại danh sách lưu bút trực tuyến mới ngay lập tức mà không cần reload trang
       await renderNotes();
-    } else {
+    }
+    else {
       alert("Gặp sự cố nhỏ khi lưu lên hệ thống Cloudflare nhen!");
     }
   } catch (e) {
