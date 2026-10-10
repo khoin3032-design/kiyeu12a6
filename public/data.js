@@ -186,7 +186,7 @@ const dailyData=[
     "anh12a6/12/daily/daily12 (1).JPEG","anh12a6/12/daily/daily12 (2).jpg","anh12a6/12/daily/daily12 (3).jpg","anh12a6/12/daily/daily12 (4).jpg"
     ,"anh12a6/12/daily/daily12 (5).jpg","anh12a6/12/daily/daily12 (6).jpg","anh12a6/12/daily/daily12 (7).jpg","anh12a6/12/daily/daily12 (8).jpg","anh12a6/12/daily/daily12 (9).jpg",
     "anh12a6/12/daily/daily12 (10).jpg","anh12a6/12/daily/daily12 (13).JPG","anh12a6/12/daily/daily12 (14).JPEG","anh12a6/12/daily/daily12 (15).JPG","anh12a6/12/daily/daily12 (16).JPG",
-    "anh12a6/12/daily/daily12 (17).JPG","anh12a6/12/daily/daily12 (19).jpg","anh12a6/12/daily/daily (22).jpg","anh12a6/12/daily/daily (20).jpg","anh12a6/12/daily/daily (21).jpg",
+    "anh12a6/12/daily/daily (22).jpg","anh12a6/12/daily/daily (20).jpg","anh12a6/12/daily/daily (21).jpg",
     "anh12a6/12/daily/daily (23).jpg",
  ]},
 ];
