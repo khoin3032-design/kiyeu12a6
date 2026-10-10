@@ -29,16 +29,6 @@ function showLb(){const m=L[I];$('lbImg').src=m.s;$('lbCount').textContent=`${I+
   $('lbThumbs').innerHTML=L.length>1?L.map((x,i)=>`<button onclick="I=${i};showLb()" class="shrink-0 w-12 h-12 rounded overflow-hidden ${i===I?'ring-2 ring-white':'opacity-50'}"><img src="${x.t}" alt="" onerror="${ERR}" class="w-full h-full object-cover"></button>`).join(''):''}
 const stepLb=d=>{I=(I+d+L.length)%L.length;showLb()};
 const closeLb=()=>$('lb').classList.add('hidden');
-function randomMemory(){
-  const pool=[
-    ...mem.flatMap(m=>m.album.map(x=>({...x,cap:`${m.title} · ${x.cap}`}))),
-    ...chuyendi.flatMap(t=>t.album.map(x=>({...x,cap:`${t.ten} · ${x.cap}`}))),
-    ...frames.map(f=>({id:f.id,cap:`Daily lớp ${f.lop}${f.cap?` · ${f.cap}`:''}`}))
-  ];
-  if(!pool.length)return;
-  const k=reg(pool.map(lbi));
-  openLb(Math.floor(Math.random()*pool.length),k);
-}
 addEventListener('keydown',e=>{if($('lb').classList.contains('hidden'))return;if(e.key==='Escape')closeLb();if(e.key==='ArrowRight')stepLb(1);if(e.key==='ArrowLeft')stepLb(-1)});
 let tx=0;$('lb').addEventListener('touchstart',e=>tx=e.touches[0].clientX);
 $('lb').addEventListener('touchend',e=>{const d=e.changedTouches[0].clientX-tx;if(Math.abs(d)>50)stepLb(d<0?1:-1)});
@@ -60,7 +50,7 @@ function home(){
     <div class="space-y-6"><p class="font-hand text-2xl red">THPT Chuyên Sơn Tây · 2022 – 2025</p>
       <h1 class="font-display font-extrabold text-5xl sm:text-7xl leading-[1.02] tracking-tight">Ba mùa phượng<br>của <span class="italic font-medium">chúng mình.</span></h1>
       <p class="muted text-base sm:text-lg leading-relaxed max-w-md">Một cuốn album nhỏ về tập thể 12A6: những trận bóng, hội trại, buổi tập văn nghệ, những chuyến đi và ngày chia tay mái trường.</p>
-      <div class="flex flex-wrap gap-3"><button onclick="goto('years')" class="bg-[var(--red)] text-white font-semibold px-6 py-3 rounded-full shadow-lg hover:brightness-110">Lật album</button><button onclick="randomMemory()" class="card font-semibold px-6 py-3 rounded-full hover:border-[var(--red)] transition">🎞 Gợi lại kỷ niệm</button></div></div>
+      <div class="flex flex-wrap gap-3"><button onclick="goto('years')" class="bg-[var(--red)] text-white font-semibold px-6 py-3 rounded-full shadow-lg hover:brightness-110">Lật album</button></div></div>
     <div class="relative h-[380px] sm:h-[440px]">${hero.map((m,i)=>`<a href="#${m.id}" class="polaroid absolute ${pos[i]}" style="transform:rotate(${rot(i)*1.4}deg)"><span class="tape"></span><img src="${U(coverOf(m),500)}" alt="${esc(m.title)}" onerror="${ERR}" class="w-full aspect-square object-cover"><span class="font-hand text-lg block mt-1.5" style="color:var(--ink)">Lớp ${m.year} · ${esc(m.date.split(' / ')[1])}</span></a>`).join('')}</div>
   </div></header>
 
