@@ -90,16 +90,16 @@ const vDur=v=>{if(!v||!v.thoiLuong)return '';const p=v.thoiLuong.split(':').map(
 function vidErr(v){v.parentNode.innerHTML='<p style="padding:2rem;color:#fff;text-align:center">Chưa tìm thấy file video. Hãy bỏ file vào thư mục <b>video/</b> và ghi đúng tên trong data.js.</p>'}
 function videoBlock(v, m) {
   if (!v) return '';
-  // Kiểm tra xem link có phải là Google Drive hoặc link nhúng đặc biệt không
-  const isDrive = v.youtube && (v.youtube.includes('drive') || v.youtube.includes('github.io'));
-  const finalSrc = isDrive ? v.youtube : `https://youtube.com{v.youtube}`;
+  // Nếu điền link Drive/Github vào ô youtube, sử dụng luôn link đó làm src
+  const finalSrc = (v.youtube && (v.youtube.includes('drive') || v.youtube.includes('github.io'))) 
+    ? v.youtube 
+    : `https://youtube.com{v.youtube}`;
 
   return `
     <div class="space-y-3">
-      <h2 class="font-display font-extrabold text-2xl sm:text-3xl">▶ ${esc(v.tieude || 'Video kỷ yếu 12A6')}</h2>
       <div class="relative w-full rounded-3xl overflow-hidden bg-black shadow-2xl border-4 border-[#CD9B4D]" style="padding-top: 56.25%;">
         <iframe 
-          class="absolute top-0 left-0 w-full h-full aspect-video" 
+          class="absolute top-0 left-0 w-full h-full" 
           src="${finalSrc}" 
           frameborder="0" 
           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
@@ -109,6 +109,7 @@ function videoBlock(v, m) {
     </div>
   `;
 }
+
 
 
 /* ---------- Trang bài viết của album ---------- */

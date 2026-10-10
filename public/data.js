@@ -147,7 +147,7 @@ const mem=[
  {id:"mem-kyyeu", year:"12", cat:"Kỷ yếu", title:"Ảnh Kỷ Yếu 12A6", date:"Tháng 05 / 2025",
   summary:"Buổi chụp kỷ yếu dưới gốc phượng và ngày chia tay mái trường.",
   story:"Hôm ấy, ai cũng đẹp. Cả lớp còn nghỉ cả buổi sáng để chuẩn bị cơ mà ... Nghĩ lại, mình thấy vui vì đã có dịp chụp chung với nhiều bạn. Ba năm cấp 3, hôm đấy mới có tấm chụp riêng với mỗi bạn. Mỗi người đều để lại trong mình một câu chuyện và những tháng ngày thật đáng nhớ. Lên đại học rồi mới hiểu vì sao người ta thường nói: những năm cấp ba là quãng thời gian đẹp nhất khi ta còn vô tư, háo hức với mọi trải nghiệm",
-  video:{tieude:"Video kỷ yếu 12A6 (Các bạn xem hết nhé, hay lắm...)", src:"", youtube:"1CY6LGGk3q_UBzm96Wfa92I0cm-K3lb1F", poster:"anh12a6/kiyeu/kiyeu (14).jpg"},
+  video:{tieude:"Video kỷ yếu 12A6 (Các bạn xem hết nhé, hay lắm...)", src:"", youtube:"https://github.io1CY6LGGk3q_UBzm96Wfa92I0cm-K3lb1F", poster:"anh12a6/kiyeu/kiyeu (14).jpg"},
   photos:["anh12a6/kiyeu/kiyeu (2).jpg","anh12a6/kiyeu/kiyeu (3).jpg","anh12a6/kiyeu/kiyeu (4).jpg","anh12a6/kiyeu/kiyeu (5).jpg","anh12a6/kiyeu/kiyeu (6).jpg","anh12a6/kiyeu/kiyeu (7).jpg",
    "anh12a6/kiyeu/kiyeu (8).jpg","anh12a6/kiyeu/kiyeu (9).jpg","anh12a6/kiyeu/kiyeu (10).jpg","anh12a6/kiyeu/kiyeu (11).jpg","anh12a6/kiyeu/kiyeu (12).jpg","anh12a6/kiyeu/kiyeu (13).jpeg","anh12a6/kiyeu/kiyeu (14).jpg"
 
