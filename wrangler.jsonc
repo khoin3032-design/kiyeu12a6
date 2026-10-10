@@ -8,5 +8,13 @@
   "ai": {
     "binding": "AI"
   },
-  "pages_build_output_dir": "./public"
+  "pages_build_output_dir": "./public",
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "luubut12a6",
+      "database_id": "1b25ea7e-114d-4a94-a4ea-d49f1353f930"
+    }
+  ]
 }
+

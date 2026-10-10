@@ -228,10 +228,75 @@ function tripPage(id){
 
 /* ---------- Lưu bút ---------- */
 const NC=['#FFE88A','#FFC9C0','#BFE3D0','#C9D8FF'];
-const getNotes=()=>{try{return JSON.parse(localStorage.getItem('a6v4-notes'))||loiNhan}catch(e){return loiNhan}};
-function renderNotes(){$('notes').innerHTML=getNotes().map((n,i)=>`<div class="p-4 rounded-sm" style="background:${NC[i%4]};color:#1D2B44;box-shadow:0 6px 14px -6px rgba(0,0,0,.3);transform:rotate(${rot(i+2)}deg)"><p class="font-hand text-2xl leading-snug">${esc(n.m)}</p><p class="text-xs font-semibold mt-3">— ${esc(n.n)}</p></div>`).join('')}
-function addNote(){const n=$('gbN').value.trim(),m=$('gbM').value.trim();if(!n||!m){(n?$('gbM'):$('gbN')).focus();return}
-  try{localStorage.setItem('a6v4-notes',JSON.stringify([{n,m},...getNotes()].slice(0,40)))}catch(e){}$('gbM').value='';renderNotes()}
+
+// 1. Hàm tự động tải toàn bộ lời nhắn thực tế từ Cloudflare Database lên màn hình
+async function renderNotes() {
+  try {
+    const res = await fetch('/api/guestbook');
+    let dbNotes = await res.json();
+    
+    // Nếu database trống, tự động lấy lời nhắn mặc định "bóc tem" từ mảng loiNhan trong data.js làm mẫu
+    if (!dbNotes || dbNotes.length === 0) {
+      dbNotes = loiNhan; 
+    }
+
+    $('notes').innerHTML = dbNotes.map((n, i) => {
+      // Đồng bộ trường dữ liệu (DB dùng name/message, data.js dùng n/m)
+      const author = n.name || n.n || 'Ẩn danh';
+      const content = n.message || n.m || '';
+      const bg = n.color || NC[i % NC.length];
+      
+      return `<div class="p-4 rounded-sm shadow-sm transition" style="background:${bg}; transform: rotate(${[-1
+        .5, 2, -2, 1.5][i % 4]}deg); border: 1px solid rgba(0,0,0,0.05);">
+        <p class="font-sans text-base text-gray-800 leading-relaxed mb-2">"${esc(content)}"</p>
+        <p class="font-hand text-right text-lg font-bold text-gray-700">— ${esc(author)}</p>
+      </div>`;
+    }).join('');
+  } catch (e) {
+    console.error("Lỗi đồng bộ lưu bút:", e);
+  }
+}
+
+// 2. Hàm xử lý gửi lời nhắn mới lên Cloudflare khi bạn học bấm nút "Dán lên"
+async function addNote() {
+  const nInput = $('gbN'), mInput = $('gbM');
+  const n = nInput.value.trim(), m = mInput.value.trim();
+  
+  if (!n || !m) {
+    if (!n) nInput.focus();
+    else mInput.focus();
+    return;
+  }
+
+  // Chọn ngẫu nhiên một màu giấy note pastel
+  const randomColor = NC[Math.floor(Math.random() * NC.length)];
+
+  try {
+    const res = await fetch('/api/guestbook', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: n, message: m, color: randomColor })
+    });
+
+    if (res.ok) {
+      nInput.value = '';
+      mInput.value = '';
+      // Tải lại danh sách lưu bút trực tuyến mới ngay lập tức mà không cần reload trang
+      await renderNotes();
+    } else {
+      alert("Gặp sự cố nhỏ khi lưu lên hệ thống Cloudflare nhen!");
+    }
+  } catch (e) {
+    alert("Không kết nối được cơ sở dữ liệu mạng rồi cậu ơi!");
+  }
+}
+
+// Thay thế lệnh khởi chạy cũ để hệ thống tự động gọi database trực tuyến khi mở trang
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', renderNotes);
+} else {
+  renderNotes();
+}
 
 /* ---------- Hình nền của từng trang (chọn trong data.js: nen) ---------- */
 function setBg(u){
