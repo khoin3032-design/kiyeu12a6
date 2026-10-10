@@ -1,37 +1,114 @@
 <!DOCTYPE html>
 <html lang="vi" class="scroll-smooth">
 <head>
-<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Ba Mùa Phượng - Kỷ Yếu 12A6 · THPT Chuyên Sơn Tây (2022-2025)</title>
-<script src="https://tailwindcss.com"></script>
-<link href="https://googleapis.com" rel="stylesheet">
-<script>tailwind.config={theme:{extend:{fontFamily:{sans:['"Be Vietnam Pro"','sans-serif'],display:['Fraunces','serif'],hand:['Caveat','cursive']}}}}</script>
-<link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Ba Mùa Phượng - Kỷ Yếu 12A6 · THPT Chuyên Sơn Tây (2022-2025)</title>
+
+  <!-- Font hỗ trợ tiếng Việt và các font trang trí -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=Dancing+Script:wght@600;700&family=Fraunces:wght@500;600;700;800&family=Share+Tech+Mono&display=swap"
+    rel="stylesheet"
+  >
+
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Be Vietnam Pro"', "sans-serif"],
+            display: ["Fraunces", "serif"],
+            hand: ["Dancing Script", "cursive"],
+            mono: ["Share Tech Mono", "monospace"]
+          }
+        }
+      }
+    };
+  </script>
+
+  <link rel="stylesheet" href="style.css">
 </head>
+
 <body class="font-sans antialiased">
-<nav class="sticky top-0 z-40 backdrop-blur-md" style="background:color-mix(in srgb,var(--paper) 85%,transparent);border-bottom:1px solid var(--line)">
-  <div class="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
-    <a href="#" class="font-display font-extrabold text-xl tracking-tight">12A6<span class="red">.</span> <span class="hidden sm:inline text-sm font-medium muted">Chuyên Sơn Tây</span></a>
-    <div class="flex items-center gap-1 sm:gap-4 text-xs sm:text-sm font-semibold">
-      <button onclick="goto('years')" class="hover:text-[var(--red)] px-1.5">Album</button>
-      <a href="#chuyen-di" class="hover:text-[var(--red)] px-1.5">Chuyến đi</a>
-      <a href="#cuon-phim" class="hover:text-[var(--red)] px-1.5">Daily</a>
-      <button onclick="goto('guestbook')" class="hover:text-[var(--red)] px-1.5 hidden sm:block">Lưu bút</button>
-      <button onclick="toggleTheme()" id="themeBtn" aria-label="Đổi sáng tối" class="w-9 h-9 rounded-full card flex items-center justify-center">🌙</button>
+  <nav
+    class="sticky top-0 z-40 backdrop-blur-md"
+    style="background: color-mix(in srgb, var(--paper) 85%, transparent); border-bottom: 1px solid var(--line)"
+  >
+    <div class="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
+      <a href="#" class="font-display font-extrabold text-xl tracking-tight">
+        12A6<span class="red">.</span>
+        <span class="hidden sm:inline text-sm font-medium muted">Chuyên Sơn Tây</span>
+      </a>
+
+      <div class="flex items-center gap-1 sm:gap-4 text-xs sm:text-sm font-semibold">
+        <button onclick="goto('years')" class="hover:text-[var(--red)] px-1.5">Album</button>
+        <a href="#chuyen-di" class="hover:text-[var(--red)] px-1.5">Chuyến đi</a>
+        <a href="#cuon-phim" class="hover:text-[var(--red)] px-1.5">Daily</a>
+        <button onclick="goto('guestbook')" class="hover:text-[var(--red)] px-1.5 hidden sm:block">
+          Lưu bút
+        </button>
+        <button
+          onclick="toggleTheme()"
+          id="themeBtn"
+          aria-label="Đổi sáng tối"
+          class="w-9 h-9 rounded-full card flex items-center justify-center"
+        >
+          🌙
+        </button>
+      </div>
+    </div>
+  </nav>
+
+  <main id="app"></main>
+
+  <footer class="py-10 text-center font-hand text-xl muted">
+    12A6 · Chuyên Sơn Tây · 2022 – 2025 — "Hẹn gặp lại ở một mùa phượng khác."
+  </footer>
+
+  <div
+    id="lb"
+    class="hidden fixed inset-0 z-50 bg-black/92 flex items-center justify-center p-4"
+    onclick="if(event.target===this)closeLb()"
+  >
+    <button
+      onclick="closeLb()"
+      class="absolute top-3 right-4 text-white text-4xl leading-none"
+      aria-label="Đóng"
+    >
+      ×
+    </button>
+
+    <button
+      onclick="stepLb(-1)"
+      class="absolute left-2 sm:left-5 text-white text-4xl px-3 py-2 bg-white/10 rounded-full"
+      aria-label="Trước"
+    >
+      ‹
+    </button>
+
+    <img id="lbImg" alt="" class="max-h-[80vh] max-w-full rounded-lg">
+
+    <button
+      onclick="stepLb(1)"
+      class="absolute right-2 sm:right-5 text-white text-4xl px-3 py-2 bg-white/10 rounded-full"
+      aria-label="Sau"
+    >
+      ›
+    </button>
+
+    <div class="absolute bottom-3 left-0 right-0 flex flex-col items-center gap-2 px-4">
+      <span id="lbCount" class="text-white/70 text-sm text-center"></span>
+      <div id="lbThumbs" class="flex gap-2 overflow-x-auto max-w-full"></div>
     </div>
   </div>
-</nav>
-<main id="app"></main>
-<footer class="py-10 text-center font-hand text-xl muted">12A6 · Chuyên Sơn Tây · 2022 – 2025 — "Hẹn gặp lại ở một mùa phượng khác."</footer>
-<div id="lb" class="hidden fixed inset-0 z-50 bg-black/92 flex items-center justify-center p-4" onclick="if(event.target===this)closeLb()">
-  <button onclick="closeLb()" class="absolute top-3 right-4 text-white text-4xl leading-none" aria-label="Đóng">×</button>
-  <button onclick="stepLb(-1)" class="absolute left-2 sm:left-5 text-white text-4xl px-3 py-2 bg-white/10 rounded-full" aria-label="Trước">‹</button>
-  <img id="lbImg" alt="" class="max-h-[80vh] max-w-full rounded-lg">
-  <button onclick="stepLb(1)" class="absolute right-2 sm:right-5 text-white text-4xl px-3 py-2 bg-white/10 rounded-full" aria-label="Sau">›</button>
-  <div class="absolute bottom-3 left-0 right-0 flex flex-col items-center gap-2 px-4"><span id="lbCount" class="text-white/70 text-sm text-center"></span><div id="lbThumbs" class="flex gap-2 overflow-x-auto max-w-full"></div></div>
-</div>
-<script src="data.js"></script>
-<script src="app.js"></script>
-<script src="potato.js"></script>
+
+  <script src="data.js"></script>
+  <script src="app.js"></script>
+  <script src="potato.js"></script>
 </body>
 </html>

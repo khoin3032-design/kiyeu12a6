@@ -77,8 +77,12 @@ const css = `
     position:fixed; bottom:105px; right:25px; width:390px; height:570px; 
     background:#FDF8EE; border-radius:28px; box-shadow:0 12px 36px rgba(0,0,0,0.12); 
     display:none; flex-direction:column; overflow:hidden; z-index:9999;
-    font-family: system-ui, -apple-system, sans-serif;
+   font-family: "Be Vietnam Pro", sans-serif;
   }
+  #pt-panel button,
+#pt-input {
+  font: inherit;
+}
   #pt-panel.open { display:flex; }
   
   #pt-header { 
