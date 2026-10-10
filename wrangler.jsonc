@@ -8,13 +8,16 @@
   "ai": {
     "binding": "AI"
   },
-   "assets": {
-    "directory": ".",
-    "exclude_patterns": [
-      "**/.git/**",
-      "**/node_modules/**"
+  "assets": {
+    "directory": "."
+  },
+  "upload": {
+    "rules": [
+      {
+        "type": "Globs",
+        "globs": ["**/.git/**", "**/node_modules/**"],
+        "fallthrough": false
+      }
     ]
   }
-
-  }
-
+}
