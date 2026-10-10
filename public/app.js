@@ -29,6 +29,16 @@ function showLb(){const m=L[I];$('lbImg').src=m.s;$('lbCount').textContent=`${I+
   $('lbThumbs').innerHTML=L.length>1?L.map((x,i)=>`<button onclick="I=${i};showLb()" class="shrink-0 w-12 h-12 rounded overflow-hidden ${i===I?'ring-2 ring-white':'opacity-50'}"><img src="${x.t}" alt="" onerror="${ERR}" class="w-full h-full object-cover"></button>`).join(''):''}
 const stepLb=d=>{I=(I+d+L.length)%L.length;showLb()};
 const closeLb=()=>$('lb').classList.add('hidden');
+function randomMemory(){
+  const pool=[
+    ...mem.flatMap(m=>m.album.map(x=>({...x,cap:`${m.title} · ${x.cap}`}))),
+    ...chuyendi.flatMap(t=>t.album.map(x=>({...x,cap:`${t.ten} · ${x.cap}`}))),
+    ...frames.map(f=>({id:f.id,cap:`Daily lớp ${f.lop}${f.cap?` · ${f.cap}`:''}`}))
+  ];
+  if(!pool.length)return;
+  const k=reg(pool.map(lbi));
+  openLb(Math.floor(Math.random()*pool.length),k);
+}
 addEventListener('keydown',e=>{if($('lb').classList.contains('hidden'))return;if(e.key==='Escape')closeLb();if(e.key==='ArrowRight')stepLb(1);if(e.key==='ArrowLeft')stepLb(-1)});
 let tx=0;$('lb').addEventListener('touchstart',e=>tx=e.touches[0].clientX);
 $('lb').addEventListener('touchend',e=>{const d=e.changedTouches[0].clientX-tx;if(Math.abs(d)>50)stepLb(d<0?1:-1)});
@@ -50,14 +60,14 @@ function home(){
     <div class="space-y-6"><p class="font-hand text-2xl red">THPT Chuyên Sơn Tây · 2022 – 2025</p>
       <h1 class="font-display font-extrabold text-5xl sm:text-7xl leading-[1.02] tracking-tight">Ba mùa phượng<br>của <span class="italic font-medium">chúng mình.</span></h1>
       <p class="muted text-base sm:text-lg leading-relaxed max-w-md">Một cuốn album nhỏ về tập thể 12A6: những trận bóng, hội trại, buổi tập văn nghệ, những chuyến đi và ngày chia tay mái trường.</p>
-      <div class="flex flex-wrap gap-3"><button onclick="goto('years')" class="bg-[var(--red)] text-white font-semibold px-6 py-3 rounded-full shadow-lg hover:brightness-110">Lật album</button></div></div>
+      <div class="flex flex-wrap gap-3"><button onclick="goto('years')" class="bg-[var(--red)] text-white font-semibold px-6 py-3 rounded-full shadow-lg hover:brightness-110">Lật album</button><button onclick="randomMemory()" class="card font-semibold px-6 py-3 rounded-full hover:border-[var(--red)] transition">🎞 Gợi lại kỷ niệm</button></div></div>
     <div class="relative h-[380px] sm:h-[440px]">${hero.map((m,i)=>`<a href="#${m.id}" class="polaroid absolute ${pos[i]}" style="transform:rotate(${rot(i)*1.4}deg)"><span class="tape"></span><img src="${U(coverOf(m),500)}" alt="${esc(m.title)}" onerror="${ERR}" class="w-full aspect-square object-cover"><span class="font-hand text-lg block mt-1.5" style="color:var(--ink)">Lớp ${m.year} · ${esc(m.date.split(' / ')[1])}</span></a>`).join('')}</div>
   </div></header>
 
   <section id="years" class="max-w-6xl mx-auto px-4 py-16 space-y-8 scroll-mt-16">
     <div class="flex flex-col md:flex-row md:items-end justify-between gap-5"><h2 class="font-display font-extrabold text-3xl sm:text-4xl">Album theo năm học</h2>
-      <div class="flex flex-wrap items-center gap-2"><input id="sq" oninput="sq=this.value;renderYears()" placeholder="Tìm album..." class="card rounded-full px-4 py-2 text-sm w-44 focus:outline-none focus:border-[var(--red)] bg-transparent"><div id="yrChips" class="flex gap-2"></div></div></div>
-    <div id="yearsBox" class="space-y-14"></div></section>
+      <div class="flex flex-wrap items-center gap-2"><input id="sq" oninput="sq=this.value;renderYears()" placeholder="Tìm bạn, năm, kỷ niệm..." class="card rounded-full px-4 py-2 text-sm w-44 focus:outline-none focus:border-[var(--red)] bg-transparent"><div id="yrChips" class="flex gap-2"></div></div></div>
+    <div id="yearsBox" class="space-y-14"></div><div id="searchResults" class="space-y-4"></div></section>
 
   <section id="own" class="max-w-6xl mx-auto px-4 pb-16 space-y-6 scroll-mt-16">
     <div><p class="font-hand text-2xl red">những kỉ niệm đáng nhớ</p><h2 class="font-display font-extrabold text-3xl sm:text-4xl">Album 12A6</h2></div>
@@ -74,15 +84,34 @@ function home(){
   renderYears();renderNotes();
 }
 function setYr(y){yr=y;renderYears()}
+const searchText=s=>String(s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/đ/g,'d');
 function renderYears(){
   $('yrChips').innerHTML=[['all','Tất cả'],['10','Lớp 10'],['11','Lớp 11'],['12','Lớp 12']].map(([k,l])=>chip(yr===k,'setYr',k,l)).join('');
-  const q=sq.trim().toLowerCase();
+  const q=searchText(sq.trim()),includesQuery=value=>searchText(value).includes(q);
   const h=['10','11','12'].filter(y=>yr==='all'||yr===y).map(y=>{
-    const items=mem.filter(m=>m.year===y&&(!q||(m.title+m.summary+m.cat).toLowerCase().includes(q)));if(!items.length)return '';
+    const items=mem.filter(m=>{
+      const people=(m.profiles||[]).flatMap(p=>[p.ten,p.role,p.quote]).join(' ');
+      return m.year===y&&(!q||includesQuery([m.title,m.summary,m.cat,m.story,m.date,m.year,people].join(' ')));
+    });
+    if(!items.length)return '';
     return `<div class="grid md:grid-cols-[150px_1fr] gap-6"><div class="md:sticky md:top-24 self-start"><div class="font-display font-extrabold text-6xl red leading-none">${y}</div><p class="muted text-sm mt-1">Năm học ${2012+ +y}–${2013+ +y}</p></div>
       <div class="grid sm:grid-cols-2 gap-8">${items.map((m,i)=>`<a href="#${m.id}" class="polaroid relative block fade-in" style="transform:rotate(${rot(i)}deg)"><span class="tape"></span><div class="relative"><img src="${U(coverOf(m))}" alt="${esc(m.title)}" loading="lazy" onerror="${ERR}" class="w-full aspect-[4/3] object-cover"><span class="absolute bottom-2 left-2 bg-black/65 text-white text-[11px] font-semibold rounded-full px-2.5 py-1">${nPhoto(m.album)}</span>${m.video?`<span class="absolute bottom-2 right-2 bg-[var(--red)] text-white text-[11px] font-semibold rounded-full px-2.5 py-1">▶ ${esc(m.video.thoiLuong||"Video")}</span>`:''}</div>
         <p class="font-hand text-xl mt-2 red">${esc(m.date)}</p><h3 class="font-display font-bold text-lg leading-snug" style="color:var(--ink)">${esc(m.title)}</h3><p class="text-sm mt-1" style="color:var(--muted)">${esc(m.summary)}</p></a>`).join('')}</div></div>`}).join('');
-  $('yearsBox').innerHTML=h||'<p class="muted text-center py-12">Không có album nào khớp.</p>';
+  $('yearsBox').innerHTML=h||(q?'':'<p class="muted text-center py-12">Không có album nào khớp.</p>');
+
+  const extra=[];
+  if(q.length>=2){
+    const people=lop.filter(p=>includesQuery(p.ten));
+    if(people.length)extra.push(`<section class="space-y-3"><h3 class="font-display font-bold text-xl">Thành viên phù hợp</h3><div class="flex flex-wrap gap-2">${people.slice(0,12).map(p=>`<span class="chip">${esc(p.ten)}${p.vaiTro?` · ${esc(p.vaiTro)}`:''}</span>`).join('')}</div>${people.length>12?`<p class="muted text-sm">Còn ${people.length-12} kết quả phù hợp.</p>`:''}</section>`);
+
+    const tripHits=chuyendi.filter(t=>includesQuery([t.ten,t.noi,t.ngay,t.mota].join(' ')));
+    if(tripHits.length)extra.push(`<section class="space-y-3"><h3 class="font-display font-bold text-xl">Chuyến đi phù hợp</h3><div class="flex flex-wrap gap-2">${tripHits.map(t=>`<a class="chip" href="#${t.id}">${esc(t.ten)} →</a>`).join('')}</div></section>`);
+
+    const dailyHits=YRS.filter(y=>{const info=dailyChuong[y]||{};return includesQuery(`Daily lớp ${y} năm học ${2012+ +y} ${2013+ +y} ${info.tieude||''} ${info.mota||''}`)});
+    if(dailyHits.length)extra.push(`<section class="space-y-3"><h3 class="font-display font-bold text-xl">Nhật ký Daily</h3><div class="flex flex-wrap gap-2">${dailyHits.map(y=>`<a class="chip" href="#cuon-phim-${y}">Daily lớp ${y} →</a>`).join('')}</div></section>`);
+  }
+  if(q&&!h&&!extra.length)extra.push('<p class="muted text-center py-4">Không tìm thấy kỷ niệm phù hợp.</p>');
+  $('searchResults').innerHTML=extra.join('');
 }
 
 /* ---------- Video của album (nếu có) ---------- */
