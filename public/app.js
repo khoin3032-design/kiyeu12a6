@@ -88,10 +88,28 @@ function renderYears(){
 /* ---------- Video của album (nếu có) ---------- */
 const vDur=v=>{if(!v||!v.thoiLuong)return '';const p=v.thoiLuong.split(':').map(Number);return p.length===2?`${p[0]} phút ${p[1]} giây`:v.thoiLuong};
 function vidErr(v){v.parentNode.innerHTML='<p style="padding:2rem;color:#fff;text-align:center">Chưa tìm thấy file video. Hãy bỏ file vào thư mục <b>video/</b> và ghi đúng tên trong data.js.</p>'}
-function videoBlock(v,m){
-  return `<div class="space-y-3"><h2 class="font-display font-extrabold text-2xl sm:text-3xl">▶ ${esc(v.tieude||'Video')}</h2>${v.thoiLuong?`<p class="font-hand text-xl red">Thời lượng ${vDur(v)}</p>`:''}
-    <div class="rounded-3xl overflow-hidden bg-black shadow-2xl">${v.youtube?`<iframe class="w-full aspect-video" src="https://www.youtube-nocookie.com/embed/${esc(v.youtube)}" title="${esc(v.tieude||'Video')}" allow="fullscreen; picture-in-picture" allowfullscreen loading="lazy"></iframe>`:`<video controls preload="metadata" playsinline poster="${U(v.poster||ph(m.photos[0]),1200)}" src="${esc(v.src)}" class="w-full aspect-video" onerror="vidErr(this)"></video>`}</div></div>`;
+function videoBlock(v, m) {
+  if (!v) return '';
+  // Kiểm tra xem link có phải là Google Drive hoặc link nhúng đặc biệt không
+  const isDrive = v.youtube && (v.youtube.includes('drive') || v.youtube.includes('github.io'));
+  const finalSrc = isDrive ? v.youtube : `https://youtube.com{v.youtube}`;
+
+  return `
+    <div class="space-y-3">
+      <h2 class="font-display font-extrabold text-2xl sm:text-3xl">▶ ${esc(v.tieude || 'Video kỷ yếu 12A6')}</h2>
+      <div class="relative w-full rounded-3xl overflow-hidden bg-black shadow-2xl border-4 border-[#CD9B4D]" style="padding-top: 56.25%;">
+        <iframe 
+          class="absolute top-0 left-0 w-full h-full aspect-video" 
+          src="${finalSrc}" 
+          frameborder="0" 
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
+          allowfullscreen>
+        </iframe>
+      </div>
+    </div>
+  `;
 }
+
 
 /* ---------- Trang bài viết của album ---------- */
 function post(id){
