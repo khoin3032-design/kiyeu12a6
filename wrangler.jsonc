@@ -9,15 +9,6 @@
     "binding": "AI"
   },
   "assets": {
-    "directory": "."
-  },
-  "upload": {
-    "rules": [
-      {
-        "type": "Globs",
-        "globs": ["**/.git/**", "**/node_modules/**"],
-        "fallthrough": false
-      }
-    ]
+    "directory": "./public"
   }
 }
