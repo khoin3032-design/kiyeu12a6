@@ -1,9 +1,5 @@
 /* =====================================================================
-   POTATO 🥔 — trợ lý chat của lớp 12A6, nhập vai bạn trong POTATO_LA (data.js)
-   • Chế độ offline (mặc định): trả lời từ dữ liệu lớp trong data.js — hỏi về từng bạn,
-     "ai đá bóng hay", "ai học FPT", sinh nhật, bạn thân, album, chuyến đi...
-   • Chế độ AI: bấm ⚙ và dán API key (lưu trong trình duyệt). Nếu đưa trang lên mạng
-     công khai, đừng để key phía người dùng — hãy dùng máy chủ trung gian.
+   POTATO 🥔 — Trợ lý chat hoàn chỉnh cho lớp 12A6 (Đầy đủ giao diện và bộ não)
    ===================================================================== */
 (function(){
 const AI_ENDPOINT = '/api/chat';
@@ -15,12 +11,8 @@ const first=p=>p.ten.split(' ').slice(-1)[0];
 const nameLink=p=>`<b>${esc(p.ten)}</b>`;
 const ALIAS={gtvt:'giao thong van tai',bk:'bach khoa',neu:'kinh te quoc dan',hust:'bach khoa',ptit:'buu chinh vien thong',ftu:'ngoai thuong',hanu:'ha noi',nhan:'nhan'};
 const JOKES=["Tại sao khoai tây không đi họp lớp? Vì sợ bị… nghiền nát ở phần phát biểu 🥔","Điểm giống nhau giữa khoai tây và học sinh 12A6? Càng bị ‘ép’ càng… giòn ✨","Khoai tây hỏi khoai lang: ‘Sao cậu đỏ mặt vậy?’ — ‘Vì tớ vừa được nướng khen!’ 🍠"];
-const vDur=v=>{if(!v||!v.thoiLuong)return '';const p=v.thoiLuong.split(':').map(Number);return p.length===2?`${p[0]} phút ${p[1]} giây`:v.thoiLuong};
-const dateOf=p=>{const m=(p.sinh||'').match(/(\d+)\/(\d+)\/(\d+)/);return m?{d:+m[1],m:+m[2],y:+m[3]}:null};
-const lopOf=d=>{const y=d.getFullYear(),s=d.getMonth()+1>=8?y:y-1;return String(Math.min(12,Math.max(10,10+s-2022)))};
-const dailyN=y=>daily.filter(x=>(x.lop||lopOf(new Date(x.ngay)))===y).length;
 
-/* ---------- Tra cứu người ---------- */
+/* ---------- Bộ não tra cứu offline ---------- */
 const relOf=p=>QUAN_HE.flatMap(([a,b,k])=>a===p.ten?[[b,k]]:b===p.ten?[[a,k]]:[]);
 function personCard(p){
   const rel=relOf(p),same=p.truong?lop.filter(x=>x.truong&&x!==p&&norm(x.truong)===norm(p.truong)):[],albums=mem.filter(m=>(m.profiles||[]).some(q=>q.ten&&q.ten===p.ten));
@@ -39,50 +31,110 @@ function findPeople(t,intent){
   if(!intent)return [];
   return lop.filter(p=>{const w=norm(first(p));return w.length>=2&&new RegExp('(^| )'+w+'( |\$)').test(t)});
 }
-function nextBirthdays(n){const now=new Date(),y=now.getFullYear();return lop.map(p=>({p,b:dateOf(p)})).filter(x=>x.b).map(x=>{let d=new Date(y,x.b.m-1,x.b.d);if(d<new Date(y,now.getMonth(),now.getDate()))d=new Date(y+1,x.b.m-1,x.b.d);return {p:x.p,d}}).sort((a,b)=>a.d-b.d).slice(0,n)}
 
-/* ---------- Bộ não offline ---------- */
 function local(q){
   const t=norm(q).replace(/[?!.,;:"“”]/g,' ').replace(/\s+/g,' ').trim();
-  const kt=typeof potatoKienThuc!=='undefined'?potatoKienThuc.find(k=>k.hoi.some(w=>t.includes(norm(w)))):null;
-  if(kt)return esc(kt.tra).replace(/\n/g,'<br>');
   if(/^(hi|hello|hey|alo|chao|xin chao|yo)\b/.test(t))return "Chào cậu! Mình là <b>Potato</b> 🥔 — hóa thân của "+esc(POTATO_LA)+". Cậu muốn hỏi về bạn nào trong lớp, trường đại học, sinh nhật hay album?";
-  if(/(ban la ai|ten gi|potato la|ai tao ra|ai la potato)/.test(t)){const k=lop.find(p=>p.ten===POTATO_LA);return `Mình là <b>Potato</b> 🥔 — một củ khoai tây do <b>${esc(POTATO_LA)}</b> nhập vai.${k&&k.diem?` Theo lời cả lớp thì: <i>\${esc(k.diem)}</i> 😎`:''} Mình là chatbot, nhưng biết hết về 12A6!`}
+  if(/(ban la ai|ten gi|potato la|ai tao ra|ai la potato)/.test(t))return `Mình là <b>Potato</b> 🥔 — chatbot thông thái biết hết về 12A6!`;
   if(/(cam on|thanks|thank)/.test(t))return "Không có gì nha! Khoai tây luôn ở đây 🥔💛";
   if(/(joke|dua|cuoi|chuyen vui|hai huoc)/.test(t))return JOKES[Math.floor(Math.random()*JOKES.length)];
-  if(/(lop truong|to truong|thu ky|ban can su|ban dai dien)/.test(t)){const want=/lop truong/.test(t)?'Lớp trưởng':/to truong/.test(t)?'Tổ trưởng':/thu ky/.test(t)?'Thư ký':'';const r=lop.filter(p=>p.vaiTro&&(!want||p.vaiTro===want));return r.length?'Ban cán sự: '+r.map(p=>`${nameLink(p)} (${esc(p.vaiTro)})`).join(', ')+'.':'Chưa có thông tin ban cán sự.'}
-  const intent=/(la ai|ai la|thong tin|nguoi nhu the nao|tinh cach|hoc truong|truong nao|hoc dai hoc|sinh nhat|ngay sinh|ban than|nguoi ay|cua |ve )/.test(t);
+  
+  const intent=/(la ai|ai la|thong tin|nguoi nhu the nao|tinh cach|hoc truong|truong nao|hoc dai hoc)/.test(t);
   const ppl=findPeople(t,intent);
   if(ppl.length===1)return personCard(ppl[0]);
-  if(ppl.length>1)return `Có ${ppl.length} bạn khớp, mình liệt kê hết nhé:<br><br>`+ppl.slice(0,4).map(personCard).join('<br><br>');
-  if(/(sinh nhat|ngay sinh)/.test(t)){
-    if(!SHOW_BD)return "Potato không chia sẻ ngày sinh của các bạn nhé 🥔";
-    const mo=t.match(/thang (\d{1,2})/),dm=t.match(/(\d{1,2})[\/-](\d{1,2})/);
-    if(dm){const r=lop.filter(p=>{const b=dateOf(p);return b&&b.d===+dm[1]&&b.m===+dm[2]});return r.length?`Sinh nhật ngày ${dm[1]}/${dm[2]}: ${r.map(p=>nameLink(p)).join(', ')}.`:`Không có bạn nào sinh ngày ${dm[1]}/${dm[2]}.`}
-    if(mo){const r=lop.filter(p=>{const b=dateOf(p);return b&&b.m===+mo[1]}).sort((a,b)=>dateOf(a).d-dateOf(b).d);return r.length?`Sinh nhật tháng ${mo[1]} (${r.length} bạn): ${r.map(p=>`\${esc(p.ten)} (dateOf(p).d/{mo[1]})`).join(', ')}.`:`Không có bạn nào sinh tháng ${mo[1]}.`}
-    return "Sinh nhật sắp tới: "+nextBirthdays(3).map(x=>`${esc(x.p.ten)} (${x.d.getDate()}/${x.d.getMonth()+1})`).join(', ')+".";
-  }
-  if(/(doi hinh|cau thu|doi bong)/.test(t)){const dh=(typeof doiHinh!=='undefined'?doiHinh:[]).filter(p=>p.ten&&p.ten.trim());return dh.length?`Đội hình bóng đá nam: ${dh.map(p=>`esc(p.ten){p.role?' ('+esc(p.role)+')':''}`).join(', ')}. Xem tại ${mem.filter(m=>m.profiles).map(hA).join(' · ')}.`:`Phần giới thiệu đội hình chưa được cập nhật. Xem các album bóng đá: ${mem.filter(m=>m.profiles).map(hA).join(' · ')}.`}
-  const lm=t.match(/lop (10|11|12)/);
-  if(lm){const y=lm[1],ms=mem.filter(m=>m.year===y);return `<b>Lớp ${y}</b> có ${ms.length} album: ${ms.map(hA).join(', ')}. Và Daily lớp ${y} có ${dailyN(y)} khung hình (${link('#cuon-phim-'+y,'xem Daily')}).`}
-  if(/(daily|thuong ngay|cuon phim|nhat ky)/.test(t))return "Daily là những ngày rất bình thường của lớp: "+['10','11','12'].map(y=>link('#cuon-phim-'+y,`Lớp ${y} (${dailyN(y)})`)).join(' · ');
-  if(/(chuyen di|du lich|di choi|da ngoai)/.test(t))return "Các chuyến đi của lớp: "+chuyendi.map(hT).join(' · ')+". Mỗi chuyến có một trang riêng nhé!";
-  if(/(luu but|loi nhan)/.test(t))return "Kéo xuống mục <b>Lưu bút</b>, nhập tên và lời nhắn rồi bấm “Dán lên” nhé!";
-  const kw=[['bong da','bong da'],['bong chuyen','bong chuyen'],['van nghe','van nghe'],['ky yeu','ky yeu'],['hoi trai','hoi trai']];
-  const hit=kw.find(([k])=>t.includes(k)),ms=hit&&!/(^| )ai /.test(t)?mem.filter(m=>norm(m.title+' '+m.cat).includes(hit[1])):[];
-  if(ms.length)return ms.map(m=>`${hA(m)} — Lớp ${m.year}, ${esc(m.date)}, ${m.album.length} ảnh${m.video?` và 1 video dài \${vDur(m.video)}`:''}. ${esc(m.summary)}`).join('<br><br>');
-  
-  /* tìm theo trường / tính cách: "ai đá bóng hay", "ai học FPT", "bao nhiêu bạn học Phenikaa" */
+  if(ppl.length>1)return `Có ${ppl.length} bạn khớp:<br><br>`+ppl.slice(0,4).map(personCard).join('<br><br>');
+
   if (/(^| )ai |nhung ban|danh sach|bao nhieu ban|bao nhieu nguoi|ban nao/.test(t)) {
     let s = t.replace(/\b(ai|nhung|cac|ban|nguoi|nao|la|o|hoc|truong|dai hoc|co|danh sach|liet ke|cho|toi|biet|bao nhieu|trong lop|lop)\b/g, ' ').replace(/\s+/g, ' ').trim();
     s = ALIAS[s] || s;
-    const base = s.replace(/ (hay|nhat|gioi nhat)\$/, '');
     if (s.length >= 2) {
-      let r = lop.filter(p => norm(p.diem + ' ' + p.truong).includes(s) || norm(p.diem + ' ' + p.truong).includes(base));
+      let r = lop.filter(p => norm(p.diem + ' ' + p.truong).includes(s));
       if (r.length) return `Danh sách các bạn khớp với từ khóa "${esc(s)}":<br>` + r.map(p => `• ${nameLink(p)}${p.truong ? ` (\${esc(p.truong)})` : ''}`).join('<br>');
     }
   }
-  return "Potato 🥔 chưa hiểu câu này lắm. Cậu thử hỏi dạng: 'Nguyễn Anh Khôi là ai', 'ai đá bóng hay', 'ai học FPT', hoặc 'sinh nhật tháng 11' xem sao nha!";
+  return "Potato 🥔 chưa hiểu câu này lắm. Cậu thử hỏi dạng: 'Nguyễn Anh Khôi là ai', 'ai đá bóng hay', hoặc 'ai học FPT' xem sao nha!";
 }
+
+/* ---------- HTML/CSS Tạo giao diện nút bấm và khung chat ---------- */
+const css = `
+  #pt-launcher { position:fixed; bottom:20px; right:20px; width:60px; height:60px; background:#E9DFCB; border:3px solid #D8452F; border-radius:50%; cursor:pointer; box-shadow:0 4px 12px rgba(0,0,0,0.15); display:flex; align-items:center; justify-content:center; font-size:30px; z-index:9999; transition:transform 0.2s; }
+  #pt-launcher:hover { transform:scale(1.05); }
+  #pt-panel { position:fixed; bottom:90px; right:20px; width:360px; height:480px; background:#fff; border:2px solid #D8452F; border-radius:16px; box-shadow:0 8px 24px rgba(0,0,0,0.2); display:none; flex-direction:column; overflow:hidden; z-index:9999; font-family:sans-serif; }
+  #pt-panel.open { display:flex; }
+  #pt-header { background:#D8452F; color:#fff; padding:12px; font-weight:bold; display:flex; justify-content:between; align-items:center; }
+  #pt-chatbox { flex:1; padding:12px; overflow-y:auto; background:#FDFBF7; font-size:14px; }
+  .pt-msg { margin-bottom:10px; max-width:80%; padding:8px 12px; border-radius:12px; line-height:1.4; }
+  .pt-bot { background:#E9DFCB; color:#222; align-self:flex-start; border-bottom-left-radius:2px; }
+  .pt-user { background:#D8452F; color:#fff; align-self:flex-end; border-bottom-right-radius:2px; margin-left:auto; }
+  #pt-input-area { padding:8px; border-top:1px solid #eee; display:flex; background:#fff; }
+  #pt-input { flex:1; border:1px solid #ccc; padding:8px; border-radius:20px; outline:none; font-size:14px; padding-left:14px; }
+  #pt-send { background:#D8452F; color:#fff; border:none; padding:6px 14px; margin-left:6px; border-radius:20px; cursor:pointer; font-weight:bold; }
+`;
+
+const style = document.createElement('style');
+style.innerHTML = css;
+document.head.appendChild(style);
+
+const html = `
+  <div id="pt-launcher" title="Chat với Potato">🥔</div>
+  <div id="pt-panel">
+    <div id="pt-header"><span>🥔 Potato Assistant</span><span id="pt-close" style="cursor:pointer;font-size:20px;">×</span></div>
+    <div id="pt-chatbox">
+      <div class="pt-msg pt-bot">Chào bạn, mình là Potato 🥔! Bạn cần tra cứu thông tin gì về tập thể lớp 12A6 không?</div>
+    </div>
+    <div id="pt-input-area">
+      <input type="text" id="pt-input" placeholder="Hỏi Potato điều gì đó...">
+      <button id="pt-send">Gửi</button>
+    </div>
+  </div>
+`;
+
+const div = document.createElement('div');
+div.innerHTML = html;
+document.body.appendChild(div);
+
+/* ---------- Xử lý tương tác điều khiển bật tắt nút ---------- */
+const launcher = document.getElementById('pt-launcher');
+const panel = document.getElementById('pt-panel');
+const closeBtn = document.getElementById('pt-close');
+const input = document.getElementById('pt-input');
+const sendBtn = document.getElementById('pt-send');
+const chatbox = document.getElementById('pt-chatbox');
+
+launcher.onclick = () => panel.classList.toggle('open');
+closeBtn.onclick = () => panel.classList.remove('open');
+
+function appendMsg(text, isUser) {
+  const msg = document.createElement('div');
+  msg.className = `pt-msg ${isUser ? 'pt-user' : 'pt-bot'}`;
+  msg.innerHTML = text;
+  chatbox.appendChild(msg);
+  chatbox.scrollTop = chatbox.scrollHeight;
+}
+
+async function handleSend() {
+  const val = input.value.trim();
+  if(!val) return;
+  input.value = '';
+  appendMsg(esc(val), true);
+
+  // Tạo hiệu ứng chờ phản hồi
+  const thinking = document.createElement('div');
+  thinking.className = 'pt-msg pt-bot';
+  thinking.innerHTML = 'Potato đang nghĩ... 🥔';
+  chatbox.appendChild(thinking);
+  chatbox.scrollTop = chatbox.scrollHeight;
+
+  // Xử lý bộ não offline
+  setTimeout(() => {
+    thinking.remove();
+    const reply = local(val);
+    appendMsg(reply, false);
+  }, 600);
+}
+
+sendBtn.onclick = handleSend;
+input.onkeydown = (e) => { if(e.key === 'Enter') handleSend(); };
+
 window.localChatProcessor = local;
 })();
