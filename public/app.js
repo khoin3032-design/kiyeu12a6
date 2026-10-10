@@ -94,7 +94,52 @@ function vbYt(s){s=String(s||'').trim();var m=s.match(/(?:youtu\.be\/|[?&]v=|\/e
 function vbDrive(s){s=String(s||'').trim();var m=s.match(/\/d\/([A-Za-z0-9_-]{15,})|[?&]id=([A-Za-z0-9_-]{15,})/);return m?(m[1]||m[2]):''}
 function vbBadHost(u){if(!/^https?:\/\//i.test(u))return '';try{var h=new URL(u).hostname;return /^[a-z0-9-]+(\.[a-z0-9-]+)+$/i.test(h)?'':h}catch(e){return u}}
 function vbNote(t){return '<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding:2rem;color:#fff;text-align:center;line-height:1.6">'+t+'</div>'}
+function vbYt(s){s=String(s||'').trim();var m=s.match(/(?:youtu\.be\/|[?&]v=|\/embed\/|\/shorts\/|\/live\/)([A-Za-z0-9_-]{11})/);return m?m[1]:(/^[A-Za-z0-9_-]{11}$/.test(s)?s:'')}
+function vbDrive(s){s=String(s||'').trim();var m=s.match(/\/d\/([A-Za-z0-9_-]{15,})|[?&]id=([A-Za-z0-9_-]{15,})/);return m?(m[1]||m[2]):''}
+function vbBadHost(u){if(!/^https?:\/\//i.test(u))return '';try{var h=new URL(u).hostname;return /^[a-z0-9-]+(\.[a-z0-9-]+)+$/i.test(h)?'':h}catch(e){return u}}
+function vbRatio(t){var m=String(t||'16/9').match(/^\s*(\d+(?:\.\d+)?)\s*[\/:x]\s*(\d+(?:\.\d+)?)\s*$/);return m&&+m[2]?(+m[1])/(+m[2]):16/9}
+function vbDur(t){var p=String(t||'').split(':').map(Number);return p.length===2&&!isNaN(p[0])&&!isNaN(p[1])?p[0]+' phút '+p[1]+' giây':String(t||'')}
+function vbNote(t){return '<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding:2rem;color:#fff;text-align:center;line-height:1.6">'+t+'</div>'}
 function videoBlock(v, m) {
+  if (!v) return '';
+  const link = String(v.youtube || v.drive || v.src || '').trim();
+  let inner = '', open = '';
+  if (/drive\.google\.com/i.test(link)) {
+    // Google Drive: phải dùng dạng /preview mới nhúng được (link /view bị chặn)
+    const id = vbDrive(link);
+    inner = id
+      ? `<iframe class="absolute top-0 left-0 w-full h-full" src="https://drive.google.com/file/d/${id}/preview" frameborder="0" allow="autoplay; fullscreen" allowfullscreen></iframe>`
+      : vbNote('Link Google Drive chưa đúng. Hãy dán link chia sẻ dạng drive.google.com/file/d/.../view');
+    open = id ? `https://drive.google.com/file/d/${id}/view` : '';
+  } else if (/youtu\.?be/i.test(link) || /^[A-Za-z0-9_-]{11}$/.test(link)) {
+    const id = vbYt(link);
+    inner = id
+      ? `<iframe class="absolute top-0 left-0 w-full h-full" src="https://www.youtube.com/embed/${id}?rel=0" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>`
+      : vbNote('Mã hoặc link YouTube chưa đúng. Hãy dán lại link video.');
+    open = id ? `https://www.youtube.com/watch?v=${id}` : '';
+  } else if (link) {
+    // file video (mp4...) trên GitHub Pages hoặc chép cùng trang
+    const bad = vbBadHost(link);
+    inner = bad
+      ? vbNote('Địa chỉ video bị dính liền hoặc gõ sai: "' + bad + '" không phải tên miền hợp lệ. Sau tên miền phải có dấu "/".')
+      : `<video controls preload="metadata" playsinline class="absolute top-0 left-0 w-full h-full" src="${link}"></video>`;
+    open = bad ? '' : link;
+  } else {
+    inner = vbNote('Chưa có link video. Hãy điền vào ô youtube, drive hoặc src trong data.js.');
+  }
+  const r = vbRatio(v.tyLe);
+  const sizeStyle = 'aspect-ratio:' + r + (r < 1 ? ';max-width:min(100%,420px);margin:0 auto' : '');
+  return `
+    <div class="space-y-3">
+      ${v.tieude ? `<h2 class="font-display font-extrabold text-2xl sm:text-3xl">▶ ${esc(v.tieude)}</h2>` : ''}
+      ${v.thoiLuong ? `<p class="font-hand text-xl" style="color:var(--red)">Thời lượng ${vbDur(v.thoiLuong)}</p>` : ''}
+      <div class="relative w-full rounded-3xl overflow-hidden bg-black shadow-2xl border-4 border-[#CD9B4D]" style="${sizeStyle}">
+        ${inner}
+      </div>
+      ${open ? `<p class="text-sm" style="color:var(--muted)">Không xem được? <a class="underline font-semibold" style="color:var(--red)" href="${open}" target="_blank" rel="noopener">Mở video ở tab mới ↗</a></p>` : ''}
+    </div>
+  `;
+}
   if (!v) return '';
   const link = String(v.youtube || v.drive || v.src || '').trim();
   let inner = '', open = '';
@@ -129,7 +174,7 @@ function videoBlock(v, m) {
       ${open ? `<p class="text-sm" style="color:var(--muted)">Không xem được? <a class="underline font-semibold" style="color:var(--red)" href="${open}" target="_blank" rel="noopener">Mở video ở tab mới ↗</a></p>` : ''}
     </div>
   `;
-}
+
 
 
 
