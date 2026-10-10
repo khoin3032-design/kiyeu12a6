@@ -247,6 +247,41 @@ function tripPage(id){
 
 /* ---------- Lưu bút ---------- */
 const NC=['#FFE88A','#FFC9C0','#BFE3D0','#C9D8FF'];
+const REACTION_OPTIONS=[['heart','❤️'],['laugh','😂'],['potato','🥔']];
+function getSelectedReactions(){try{return JSON.parse(localStorage.getItem('a6-note-reactions')||'{}')}catch(e){return {}}}
+function getReactionVisitorId(){
+  const key='a6-reaction-visitor';
+  try{
+    let id=localStorage.getItem(key);
+    if(!id){id=crypto.randomUUID();localStorage.setItem(key,id)}
+    return id;
+  }catch(e){return '';}
+}
+function reactionBar(note){
+  const id=Number(note.id);
+  if(!Number.isSafeInteger(id)||id<1)return '';
+  const selected=getSelectedReactions()[id],counts=note.reactions||{};
+  return `<div class="flex gap-2 mt-3" aria-label="Biểu cảm">${REACTION_OPTIONS.map(([key,emoji])=>`<button type="button" onclick="reactNote(${id},'${key}')" aria-pressed="${selected===key}" class="inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-sm transition ${selected===key?'border-[var(--red)] bg-white/70':'border-transparent hover:border-[var(--line)]'}"><span>${emoji}</span><span>${Number(counts[key])||0}</span></button>`).join('')}</div>`;
+}
+async function reactNote(noteId,reaction){
+  const visitorId=getReactionVisitorId();
+  if(!visitorId){alert('Không lưu được biểu cảm trên trình duyệt này.');return}
+  const selected=getSelectedReactions(),key=String(noteId);
+  const next=selected[key]===reaction?null:reaction;
+  try{
+    const res=await fetch('/api/guestbook',{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({action:'react',noteId,visitorId,reaction:next})
+    });
+    if(!res.ok)throw new Error(`HTTP ${res.status}`);
+    if(next)selected[key]=next;else delete selected[key];
+    localStorage.setItem('a6-note-reactions',JSON.stringify(selected));
+    await renderNotes();
+  }catch(error){
+    console.error('Lỗi lưu biểu cảm:',error);
+    alert('Chưa lưu được biểu cảm. Bạn thử lại nhé!');
+  }
+}
 // Tải lời nhắn từ Cloudflare Database
 async function renderNotes() {
   const notesEl = $('notes');
@@ -278,6 +313,7 @@ async function renderNotes() {
         >
           <p class="font-sans text-base text-gray-800 leading-relaxed mb-2">"${esc(content)}"</p>
           <p class="font-hand text-right text-lg font-bold text-gray-700">— ${esc(author)}</p>
+          ${reactionBar(note)}
         </div>
       `;
     }).join('');
@@ -298,6 +334,7 @@ async function renderNotes() {
         >
           <p class="font-sans text-base text-gray-800 leading-relaxed mb-2">"${esc(content)}"</p>
           <p class="font-hand text-right text-lg font-bold text-gray-700">— ${esc(author)}</p>
+          ${reactionBar(note)}
         </div>
       `;
     }).join('');
