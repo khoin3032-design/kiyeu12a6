@@ -20,9 +20,16 @@ async function ensureGuestbookTable(db) {
       name TEXT NOT NULL,
       message TEXT NOT NULL,
       color TEXT NOT NULL DEFAULT '#FFE88A',
+      user_id TEXT,
+      avatar_url TEXT NOT NULL DEFAULT '',
+      photo_url TEXT NOT NULL DEFAULT '',
       created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
     )
   `).run();
+
+  for (const [column, definition] of [['user_id', 'TEXT'], ['avatar_url', "TEXT NOT NULL DEFAULT ''"], ['photo_url', "TEXT NOT NULL DEFAULT ''"]]) {
+    try { await db.prepare(`ALTER TABLE guestbook ADD COLUMN ${column} ${definition}`).run(); } catch {}
+  }
 
   await db.prepare(`
     CREATE TABLE IF NOT EXISTS guestbook_reactions (
@@ -42,7 +49,7 @@ export async function onRequestGet({ env }) {
 
     await ensureGuestbookTable(env.DB);
     const [notesResponse, reactionsResponse] = await Promise.all([
-      env.DB.prepare("SELECT id, name, message, color FROM guestbook ORDER BY id DESC LIMIT 100").all(),
+      env.DB.prepare("SELECT id, name, message, color, avatar_url, photo_url FROM guestbook ORDER BY id DESC LIMIT 100").all(),
       env.DB.prepare("SELECT note_id, reaction, COUNT(*) AS count FROM guestbook_reactions GROUP BY note_id, reaction").all()
     ]);
 
@@ -110,20 +117,30 @@ export async function onRequestPost({ request, env }) {
       return json({ ok: true });
     }
 
-    const name = typeof body?.name === "string" ? body.name.trim() : "";
+    const cookie = request.headers.get("Cookie") || "";
+    const sessionToken = cookie.split(";").map(x => x.trim()).find(x => x.startsWith("a6_session="))?.slice(11);
+    if (!sessionToken) return json({ error: "Đăng nhập để gửi lưu bút." }, 401);
+    const tokenHash = Array.from(new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(sessionToken)))).map(x => x.toString(16).padStart(2, "0")).join("");
+    const account = await env.DB.prepare("SELECT a.id, a.username, a.display_name, a.avatar_url, a.must_change_password FROM account_sessions s JOIN accounts a ON a.id=s.account_id WHERE s.token_hash=? AND s.expires_at>?").bind(tokenHash, Math.floor(Date.now()/1000)).first();
+    if (!account) return json({ error: "Phiên đăng nhập hết hạn. Hãy đăng nhập lại." }, 401);
+    if (account.must_change_password) return json({ error: "Hãy đổi mật khẩu tạm trước khi gửi lưu bút." }, 403);
+    const name = account.display_name || account.username;
     const message = typeof body?.message === "string" ? body.message.trim() : "";
     const color = COLORS.has(body?.color) ? body.color : "#FFE88A";
+    const photoUrl = typeof body?.photoUrl === "string" ? body.photoUrl : "";
 
-    if (!name || !message) {
-      return json({ error: "Vui lòng nhập tên và lời nhắn." }, 400);
+    if (photoUrl && !/^\/api\/image\?id=[0-9a-f-]{36}$/i.test(photoUrl)) return json({ error: "Ảnh đính kèm không hợp lệ." }, 400);
+
+    if (!message) {
+      return json({ error: "Vui lòng nhập lời nhắn." }, 400);
     }
-    if (name.length > 30 || message.length > 140) {
-      return json({ error: "Tên tối đa 30 ký tự, lời nhắn tối đa 140 ký tự." }, 400);
+    if (message.length > 140) {
+      return json({ error: "Lời nhắn tối đa 140 ký tự." }, 400);
     }
 
     await env.DB
-      .prepare("INSERT INTO guestbook (name, message, color) VALUES (?, ?, ?)")
-      .bind(name, message, color)
+      .prepare("INSERT INTO guestbook (name, message, color, user_id, avatar_url, photo_url) VALUES (?, ?, ?, ?, ?, ?)")
+      .bind(name, message, color, account.id, account.avatar_url || "", photoUrl)
       .run();
 
     return json({ ok: true }, 201);

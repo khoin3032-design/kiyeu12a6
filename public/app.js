@@ -312,6 +312,8 @@ async function renderNotes() {
           style="background:${esc(bg)}; transform:rotate(-1.5deg); border:1px solid rgba(0,0,0,0.05);"
         >
           <p class="font-sans text-base text-gray-800 leading-relaxed mb-2">"${esc(content)}"</p>
+          ${/^\/api\/image\?id=[0-9a-f-]{36}$/i.test(note.avatar_url||'')?`<img src="${esc(note.avatar_url)}" alt="Ảnh đại diện ${esc(author)}" loading="lazy" class="w-10 h-10 rounded-full object-cover mb-2">`:''}
+          ${/^\/api\/image\?id=[0-9a-f-]{36}$/i.test(note.photo_url||'')?`<img src="${esc(note.photo_url)}" alt="Ảnh đính kèm của ${esc(author)}" loading="lazy" class="w-full rounded-xl object-cover max-h-64 mb-2">`:''}
           <p class="font-hand text-right text-lg font-bold text-gray-700">— ${esc(author)}</p>
           ${reactionBar(note)}
         </div>
@@ -333,6 +335,8 @@ async function renderNotes() {
           style="background:${esc(bg)}; transform:rotate(-1.5deg); border:1px solid rgba(0,0,0,0.05);"
         >
           <p class="font-sans text-base text-gray-800 leading-relaxed mb-2">"${esc(content)}"</p>
+          ${/^\/api\/image\?id=[0-9a-f-]{36}$/i.test(note.avatar_url||'')?`<img src="${esc(note.avatar_url)}" alt="Ảnh đại diện ${esc(author)}" loading="lazy" class="w-10 h-10 rounded-full object-cover mb-2">`:''}
+          ${/^\/api\/image\?id=[0-9a-f-]{36}$/i.test(note.photo_url||'')?`<img src="${esc(note.photo_url)}" alt="Ảnh đính kèm của ${esc(author)}" loading="lazy" class="w-full rounded-xl object-cover max-h-64 mb-2">`:''}
           <p class="font-hand text-right text-lg font-bold text-gray-700">— ${esc(author)}</p>
           ${reactionBar(note)}
         </div>
