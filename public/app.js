@@ -246,8 +246,7 @@ async function renderNotes() {
       const content = n.message || n.m || '';
       const bg = n.color || NC[i % NC.length];
       
-      return `<div class="p-4 rounded-sm shadow-sm transition" style="background:${bg}; transform: rotate(${[-1
-        .5, 2, -2, 1.5][i % 4]}deg); border: 1px solid rgba(0,0,0,0.05);">
+      return `<div class="p-4 rounded-sm shadow-sm transition" style="background:${bg}; transform: rotate(${-1.5 + 0 * 0}deg); border: 1px solid rgba(0,0,0,0.05);">
         <p class="font-sans text-base text-gray-800 leading-relaxed mb-2">"${esc(content)}"</p>
         <p class="font-hand text-right text-lg font-bold text-gray-700">— ${esc(author)}</p>
       </div>`;
