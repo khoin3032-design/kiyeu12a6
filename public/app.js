@@ -112,6 +112,7 @@ function videoBlock(v, m) {
 
 
 
+
 /* ---------- Trang bài viết của album ---------- */
 function post(id){
   const i=mem.findIndex(m=>m.id===id),m=mem[i],k=reg(m.album.map(lbi)),pr=(m.profiles||[]).filter(p=>p.ten&&p.ten.trim());
