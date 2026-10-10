@@ -228,71 +228,105 @@ function tripPage(id){
 
 /* ---------- Lưu bút ---------- */
 const NC=['#FFE88A','#FFC9C0','#BFE3D0','#C9D8FF'];
-
-// 1. Hàm tự động tải toàn bộ lời nhắn thực tế từ Cloudflare Database lên màn hình
+// Tải lời nhắn từ Cloudflare Database
 async function renderNotes() {
+  const notesEl = $('notes');
+
   try {
     const res = await fetch('/api/guestbook');
-    let dbNotes = await res.json();
-    
-    // Nếu database trống, tự động lấy lời nhắn mặc định "bóc tem" từ mảng loiNhan trong data.js làm mẫu
-    if (!dbNotes || dbNotes.length === 0) {
-      dbNotes = loiNhan; 
+
+    if (!res.ok) {
+      throw new Error(`Không tải được lời nhắn: HTTP ${res.status}`);
     }
 
-    $('notes').innerHTML = dbNotes.map((n, i) => {
-      // Đồng bộ trường dữ liệu (DB dùng name/message, data.js dùng n/m)
-      const author = n.name || n.n || 'Ẩn danh';
-      const content = n.message || n.m || '';
-      const bg = n.color || NC[i % NC.length];
-      
-      return `<div class="p-4 rounded-sm shadow-sm transition" style="background:${bg}; transform: rotate(${-1.5 + 0 * 0}deg); border: 1px solid rgba(0,0,0,0.05);">
-        <p class="font-sans text-base text-gray-800 leading-relaxed mb-2">"${esc(content)}"</p>
-        <p class="font-hand text-right text-lg font-bold text-gray-700">— ${esc(author)}</p>
-      </div>`;
+    let dbNotes = await res.json();
+
+    // Nếu database chưa có lời nhắn, dùng lời nhắn mẫu trong data.js
+    if (!Array.isArray(dbNotes) || dbNotes.length === 0) {
+      dbNotes = Array.isArray(loiNhan) ? loiNhan : [];
+    }
+
+    notesEl.innerHTML = dbNotes.map((note, i) => {
+      // DB dùng name/message; data.js dùng n/m
+      const author = note.name || note.n || 'Ẩn danh';
+      const content = note.message || note.m || '';
+      const bg = note.color || NC[i % NC.length];
+
+      return `
+        <div
+          class="p-4 rounded-sm shadow-sm transition"
+          style="background:${esc(bg)}; transform:rotate(-1.5deg); border:1px solid rgba(0,0,0,0.05);"
+        >
+          <p class="font-sans text-base text-gray-800 leading-relaxed mb-2">"${esc(content)}"</p>
+          <p class="font-hand text-right text-lg font-bold text-gray-700">— ${esc(author)}</p>
+        </div>
+      `;
     }).join('');
-  } catch (e) {
-    console.error("Lỗi đồng bộ lưu bút:", e);
+  } catch (error) {
+    console.error('Lỗi đồng bộ lưu bút:', error);
+
+    // Nếu API gặp lỗi, vẫn hiện lời nhắn mẫu trong data.js
+    const fallbackNotes = Array.isArray(loiNhan) ? loiNhan : [];
+    notesEl.innerHTML = fallbackNotes.map((note, i) => {
+      const author = note.name || note.n || 'Ẩn danh';
+      const content = note.message || note.m || '';
+      const bg = note.color || NC[i % NC.length];
+
+      return `
+        <div
+          class="p-4 rounded-sm shadow-sm transition"
+          style="background:${esc(bg)}; transform:rotate(-1.5deg); border:1px solid rgba(0,0,0,0.05);"
+        >
+          <p class="font-sans text-base text-gray-800 leading-relaxed mb-2">"${esc(content)}"</p>
+          <p class="font-hand text-right text-lg font-bold text-gray-700">— ${esc(author)}</p>
+        </div>
+      `;
+    }).join('');
   }
 }
 
-// 2. Hàm xử lý gửi lời nhắn mới lên Cloudflare khi bạn học bấm nút "Dán lên"
+// Gửi lời nhắn mới lên Cloudflare
 async function addNote() {
- //  Dòng code sửa lại chuẩn xác:
-const n = $('gbN').value.trim(), m = $('gbM').value.trim();
+  const nameInput = $('gbN');
+  const messageInput = $('gbM');
+  const name = nameInput.value.trim();
+  const message = messageInput.value.trim();
 
-  
-  if (!n || !m) {
-    if (!n) nInput.focus();
-    else mInput.focus();
+  if (!name || !message) {
+    if (!name) nameInput.focus();
+    else messageInput.focus();
     return;
   }
 
-  // Chọn ngẫu nhiên một màu giấy note pastel
   const randomColor = NC[Math.floor(Math.random() * NC.length)];
 
   try {
     const res = await fetch('/api/guestbook', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name: n, message: m, color: randomColor })
+      body: JSON.stringify({
+        name,
+        message,
+        color: randomColor
+      })
     });
 
-       if (res.ok) {
-      $('gbN').value = '';
-      $('gbM').value = '';
-      // Tải lại danh sách lưu bút trực tuyến mới ngay lập tức mà không cần reload trang
-      await renderNotes();
+    if (!res.ok) {
+      throw new Error(`Không lưu được lời nhắn: HTTP ${res.status}`);
     }
-    else {
-      alert("Gặp sự cố nhỏ khi lưu lên hệ thống Cloudflare nhen!");
-    }
-  } catch (e) {
-    alert("Không kết nối được cơ sở dữ liệu mạng rồi cậu ơi!");
+
+    nameInput.value = '';
+    messageInput.value = '';
+
+    // Cập nhật danh sách ngay sau khi lưu thành công
+    await renderNotes();
+  } catch (error) {
+    console.error('Lỗi gửi lời nhắn:', error);
+    alert('Không lưu được lời nhắn. Bạn thử lại nhé!');
   }
 }
 
-// Thay thế lệnh khởi chạy cũ để hệ thống tự động gọi database trực tuyến khi mở trang
+// Tải lời nhắn khi trang đã sẵn sàng
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', renderNotes);
 } else {
