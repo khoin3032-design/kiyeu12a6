@@ -250,7 +250,7 @@ async function renderNotes() {
       // DB dùng name/message; data.js dùng n/m
       const author = note.name || note.n || 'Ẩn danh';
       const content = note.message || note.m || '';
-      const bg = note.color || NC[i % NC.length];
+      const bg = NC[i % NC.length];
 
       return `
         <div
@@ -270,7 +270,7 @@ async function renderNotes() {
     notesEl.innerHTML = fallbackNotes.map((note, i) => {
       const author = note.name || note.n || 'Ẩn danh';
       const content = note.message || note.m || '';
-      const bg = note.color || NC[i % NC.length];
+      const bg = NC[i % NC.length];
 
       return `
         <div
