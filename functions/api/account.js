@@ -4,7 +4,7 @@ const hex=b=>[...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,"0")).join(
 const unhex=s=>new Uint8Array((s.match(/.{2}/g)||[]).map(x=>parseInt(x,16)));
 const random=n=>{const b=new Uint8Array(n);crypto.getRandomValues(b);return b};
 async function digest(s){return hex(await crypto.subtle.digest("SHA-256",new TextEncoder().encode(s)))}
-async function derive(password,salt){const key=await crypto.subtle.importKey("raw",new TextEncoder().encode(password),"PBKDF2",false,["deriveBits"]);return hex(await crypto.subtle.deriveBits({name:"PBKDF2",hash:"SHA-256",salt:unhex(salt),iterations:210000},key,256))}
+async function derive(password,salt){const key=await crypto.subtle.importKey("raw",new TextEncoder().encode(password),"PBKDF2",false,["deriveBits"]);return hex(await crypto.subtle.deriveBits({name:"PBKDF2",hash:"SHA-256",salt:unhex(salt),iterations:100000},key,256))}
 async function setup(db){
  await db.prepare("CREATE TABLE IF NOT EXISTS accounts(id TEXT PRIMARY KEY,username TEXT NOT NULL UNIQUE,email TEXT NOT NULL DEFAULT '',email_verified INTEGER NOT NULL DEFAULT 0,password_hash TEXT NOT NULL,salt TEXT NOT NULL,display_name TEXT NOT NULL DEFAULT '',avatar_url TEXT NOT NULL DEFAULT '',must_change_password INTEGER NOT NULL DEFAULT 0,created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP)").run();
  for(const [c,d] of [["email","TEXT NOT NULL DEFAULT ''"],["email_verified","INTEGER NOT NULL DEFAULT 0"],["must_change_password","INTEGER NOT NULL DEFAULT 0"]])try{await db.prepare("ALTER TABLE accounts ADD COLUMN "+c+" "+d).run()}catch{}
