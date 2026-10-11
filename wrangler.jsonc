@@ -15,6 +15,11 @@
       "database_name": "luubut12a6",
       "database_id": "1b25ea7e-114d-4a94-a4ea-d49f1353f930"
     }
+  ],
+  "r2_buckets": [
+    {
+      "binding": "IMAGES",
+      "bucket_name": "kiyeu12a6-images"
+    }
   ]
 }
-
