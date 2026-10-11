@@ -69,7 +69,7 @@ function home(){
     </div></section>
 
   <section id="guestbook" class="max-w-6xl mx-auto px-4 py-16 space-y-8 scroll-mt-16"><div><h2 class="font-display font-extrabold text-3xl sm:text-4xl">Lưu bút</h2><p class="muted mt-1">Để lại vài dòng cho tụi mình sau này đọc lại nhé.</p></div>
-    <div class="card rounded-2xl p-5 grid sm:grid-cols-[1fr_2fr_auto] gap-3"><input id="gbN" maxlength="30" placeholder="Tên của bạn" class="bg-transparent border rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-[var(--red)]" style="border-color:var(--line)"><input id="gbM" maxlength="140" placeholder="Lời nhắn (tối đa 140 ký tự)" onkeydown="if(event.key==='Enter')addNote()" class="bg-transparent border rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-[var(--red)]" style="border-color:var(--line)"><button onclick="addNote()" class="bg-[var(--red)] text-white font-semibold px-6 py-2.5 rounded-xl hover:brightness-110">Dán lên</button></div>
+    <div class="card rounded-2xl p-5 grid sm:grid-cols-[1fr_2fr_auto] gap-3"><input id="gbN" maxlength="30" placeholder="Tên của bạn" class="bg-transparent border rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-[var(--red)]" style="border-color:var(--line)"><input id="gbM" maxlength="140" placeholder="Lời nhắn (có thể bỏ trống nếu đính kèm ảnh)" onkeydown="if(event.key==='Enter')addNote()" class="bg-transparent border rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-[var(--red)]" style="border-color:var(--line)"><button onclick="addNote()" class="bg-[var(--red)] text-white font-semibold px-6 py-2.5 rounded-xl hover:brightness-110">Dán lên</button></div>
     <div id="notes" class="grid sm:grid-cols-2 lg:grid-cols-4 gap-5"></div></section>`;
   renderYears();renderNotes();
 }
@@ -311,7 +311,7 @@ async function renderNotes() {
           class="p-4 rounded-sm shadow-sm transition"
           style="background:${esc(bg)}; transform:rotate(-1.5deg); border:1px solid rgba(0,0,0,0.05);"
         >
-          <p class="font-sans text-base text-gray-800 leading-relaxed mb-2">"${esc(content)}"</p>
+          ${content ? `<p class="font-sans text-base text-gray-800 leading-relaxed mb-2">"${esc(content)}"</p>` : ""}
           ${/^\/api\/image\?id=[0-9a-f-]{36}$/i.test(note.avatar_url||'')?`<img src="${esc(note.avatar_url)}" alt="Ảnh đại diện ${esc(author)}" loading="lazy" class="w-10 h-10 rounded-full object-cover mb-2">`:''}
           ${/^\/api\/image\?id=[0-9a-f-]{36}$/i.test(note.photo_url||'')?`<img src="${esc(note.photo_url)}" alt="Ảnh đính kèm của ${esc(author)}" loading="lazy" class="w-full rounded-xl object-cover max-h-64 mb-2">`:''}
           <p class="font-hand text-right text-lg font-bold text-gray-700">— ${esc(author)}</p>
@@ -334,7 +334,7 @@ async function renderNotes() {
           class="p-4 rounded-sm shadow-sm transition"
           style="background:${esc(bg)}; transform:rotate(-1.5deg); border:1px solid rgba(0,0,0,0.05);"
         >
-          <p class="font-sans text-base text-gray-800 leading-relaxed mb-2">"${esc(content)}"</p>
+          ${content ? `<p class="font-sans text-base text-gray-800 leading-relaxed mb-2">"${esc(content)}"</p>` : ""}
           ${/^\/api\/image\?id=[0-9a-f-]{36}$/i.test(note.avatar_url||'')?`<img src="${esc(note.avatar_url)}" alt="Ảnh đại diện ${esc(author)}" loading="lazy" class="w-10 h-10 rounded-full object-cover mb-2">`:''}
           ${/^\/api\/image\?id=[0-9a-f-]{36}$/i.test(note.photo_url||'')?`<img src="${esc(note.photo_url)}" alt="Ảnh đính kèm của ${esc(author)}" loading="lazy" class="w-full rounded-xl object-cover max-h-64 mb-2">`:''}
           <p class="font-hand text-right text-lg font-bold text-gray-700">— ${esc(author)}</p>

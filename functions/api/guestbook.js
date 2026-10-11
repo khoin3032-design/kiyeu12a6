@@ -131,8 +131,8 @@ export async function onRequestPost({ request, env }) {
 
     if (photoUrl && !/^\/api\/image\?id=[0-9a-f-]{36}$/i.test(photoUrl)) return json({ error: "Ảnh đính kèm không hợp lệ." }, 400);
 
-    if (!message) {
-      return json({ error: "Vui lòng nhập lời nhắn." }, 400);
+    if (!message && !photoUrl) {
+      return json({ error: "Hãy nhập lời nhắn hoặc đính kèm ảnh." }, 400);
     }
     if (message.length > 140) {
       return json({ error: "Lời nhắn tối đa 140 ký tự." }, 400);

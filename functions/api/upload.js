@@ -15,7 +15,7 @@ export async function onRequestPost({request,env}){
   if(!(file instanceof File)||!file.size)return json({error:"Chọn ảnh trước khi tải lên."},400);
   const types=new Set(["image/jpeg","image/png","image/webp"]);
   if(!types.has(file.type))return json({error:"Chỉ nhận ảnh JPG, PNG hoặc WebP."},415);
-  if(file.size>1_500_000)return json({error:"Ảnh sau khi nén cần nhỏ hơn 1,5 MB."},413);
+  if(file.size>150_000)return json({error:"Ảnh sau khi nén cần nhỏ hơn 150 KB."},413);
   const id=crypto.randomUUID(),bytes=new Uint8Array(await file.arrayBuffer());
   await env.DB.prepare(`CREATE TABLE IF NOT EXISTS uploaded_images(
     id TEXT PRIMARY KEY, data BLOB NOT NULL, content_type TEXT NOT NULL,

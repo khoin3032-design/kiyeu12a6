@@ -4,11 +4,23 @@
   const byId=id=>document.getElementById(id);
   const escapeHtml=value=>String(value||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const avatarHtml=(user,size=42)=>user?.avatar_url?'<img src="'+escapeHtml(user.avatar_url)+'" alt="" class="rounded-full object-cover" style="width:'+size+'px;height:'+size+'px">':'<span class="inline-flex rounded-full items-center justify-center font-bold text-white" style="width:'+size+'px;height:'+size+'px;background:var(--red)">'+escapeHtml((user?.display_name||user?.username||'?').slice(0,1).toUpperCase())+'</span>';
-  async function api(body){const r=await fetch('/api/account',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}),d=await r.json();if(!r.ok)throw new Error(d.error||'Không thực hiện được.');return d}
+  async function parseResponse(response){
+   const text=await response.text();let data;
+   try{data=JSON.parse(text)}catch{throw new Error(`Máy chủ trả phản hồi lỗi (HTTP ${response.status}). Hãy kiểm tra Cloudflare Logs.`)}
+   if(!response.ok)throw new Error(data.error||'Không thực hiện được.');return data
+  }
+  async function api(body){const response=await fetch('/api/account',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});return parseResponse(response)}
   async function upload(file){
    if(!file)return '';if(!['image/jpeg','image/png','image/webp'].includes(file.type))throw new Error('Chỉ nhận ảnh JPG, PNG hoặc WebP.');
-   let image=file;if(file.size>1400000&&window.createImageBitmap){const bitmap=await createImageBitmap(file),scale=Math.min(1,1600/Math.max(bitmap.width,bitmap.height)),canvas=document.createElement('canvas');canvas.width=Math.max(1,Math.round(bitmap.width*scale));canvas.height=Math.max(1,Math.round(bitmap.height*scale));canvas.getContext('2d').drawImage(bitmap,0,0,canvas.width,canvas.height);bitmap.close();for(const q of [.82,.72,.62,.52]){image=await new Promise(resolve=>canvas.toBlob(resolve,'image/webp',q));if(image&&image.size<=1400000)break}if(!image||image.size>1500000)throw new Error('Ảnh vẫn lớn sau khi nén. Hãy chọn ảnh nhỏ hơn.')}
-   if(image.size>1500000)throw new Error('Ảnh cần nhỏ hơn 1,5 MB.');const form=new FormData();form.append('image',image,'photo.webp');const r=await fetch('/api/upload',{method:'POST',body:form}),d=await r.json();if(!r.ok)throw new Error(d.error||'Không tải được ảnh.');return d.url
+   let image=file;
+   if(window.createImageBitmap){
+    const bitmap=await createImageBitmap(file),scale=Math.min(1,720/Math.max(bitmap.width,bitmap.height)),canvas=document.createElement('canvas');
+    canvas.width=Math.max(1,Math.round(bitmap.width*scale));canvas.height=Math.max(1,Math.round(bitmap.height*scale));canvas.getContext('2d').drawImage(bitmap,0,0,canvas.width,canvas.height);bitmap.close();
+    let compressed=null;for(const quality of [.68,.58,.48,.38,.28]){compressed=await new Promise(resolve=>canvas.toBlob(resolve,'image/webp',quality));if(compressed&&compressed.size<=120000)break}
+    if(!compressed||compressed.size>150000)throw new Error('Ảnh sau khi nén vẫn lớn hơn 150 KB. Hãy chọn ảnh khác.');image=compressed;
+   }else if(file.size>150000)throw new Error('Trình duyệt không nén được ảnh này. Hãy chọn ảnh dưới 150 KB.');
+   if(image.size>150000)throw new Error('Ảnh cần nhỏ hơn 150 KB sau khi nén.');
+   const form=new FormData();form.append('image',image,'photo.webp');const response=await fetch('/api/upload',{method:'POST',body:form}),data=await parseResponse(response);return data.url
   }
   function showMessage(text,error=false){const n=byId('a6AccountMessage');if(n){n.textContent=text;n.style.color=error?'var(--red)':'var(--muted)'}}
   function renderAccount(){
@@ -44,7 +56,7 @@
   window.changeA6Password=async()=>{try{const d=await api({action:'change-password',password:byId('a6ReplacementPassword').value});currentUser=d.user;renderAccount();byId('a6ReplacementPassword').value='';showMessage('Đổi mật khẩu thành công.')}catch(e){showMessage(e.message,true)}};
   window.logoutA6=async()=>{try{await api({action:'logout'});currentUser=null;renderAccount();showMessage('Đã đăng xuất.');if(window.renderNotes)window.renderNotes()}catch(e){showMessage(e.message,true)}};
   window.saveA6Profile=async()=>{try{const file=byId('a6AvatarFile').files[0],avatarUrl=file?await upload(file):currentUser.avatar_url,d=await api({action:'profile',displayName:byId('a6DisplayName').value,avatarUrl});currentUser=d.user;renderAccount();showMessage('Đã lưu hồ sơ.');if(window.renderNotes)window.renderNotes()}catch(e){showMessage(e.message,true)}};
-  window.addNote=async()=>{if(!currentUser){openAccount();showMessage('Đăng nhập hoặc tạo tài khoản trước khi gửi lưu bút.');return}const message=byId('gbM').value.trim();if(!message){byId('gbM').focus();return}const button=document.querySelector('#guestbook button[onclick="addNote()"]');if(button)button.disabled=true;try{const photoUrl=await upload(byId('gbPhoto').files[0]),r=await fetch('/api/guestbook',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({message,photoUrl,color:['#FFE88A','#FFC9C0','#BFE3D0','#C9D8FF'][Math.floor(Math.random()*4)]})}),d=await r.json();if(!r.ok)throw new Error(d.error||'Không lưu được lời nhắn.');byId('gbM').value='';byId('gbPhoto').value='';if(window.renderNotes)await window.renderNotes()}catch(e){alert(e.message)}finally{if(button)button.disabled=false}};
+  window.addNote=async()=>{if(!currentUser){openAccount();showMessage('Đăng nhập hoặc tạo tài khoản trước khi gửi lưu bút.');return}const message=byId('gbM').value.trim(),photoFile=byId('gbPhoto').files[0];if(!message&&!photoFile){alert('Hãy viết lời nhắn hoặc chọn ảnh nhé.');byId('gbM').focus();return}const button=document.querySelector('#guestbook button[onclick="addNote()"]');if(button)button.disabled=true;try{const photoUrl=await upload(photoFile),response=await fetch('/api/guestbook',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({message,photoUrl,color:['#FFE88A','#FFC9C0','#BFE3D0','#C9D8FF'][Math.floor(Math.random()*4)]})});await parseResponse(response);byId('gbM').value='';byId('gbPhoto').value='';if(window.renderNotes)await window.renderNotes()}catch(e){alert(e.message)}finally{if(button)button.disabled=false}};
   function init(){injectUi();fetch('/api/account').then(r=>r.json()).then(d=>{currentUser=d.user||null;if(currentUser)byId('a6UserName').textContent=currentUser.username;renderAccount();if(currentUser&&Number(currentUser.must_change_password)){openAccount();showMessage('Đổi mật khẩu tạm để tiếp tục.')}}).catch(()=>renderAccount())}
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
 })();
