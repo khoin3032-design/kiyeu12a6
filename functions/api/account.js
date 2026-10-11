@@ -66,14 +66,14 @@ export async function onRequest({request,env}){
   }
   if(b.action==="change-password"){
    const current=await user(request,env.DB);if(!current)return reply({error:"Hãy đăng nhập trước."},401);
-   const pass=String(b.password||"");if(pass.length<10||pass.length>128)return reply({error:"Mật khẩu mới cần từ 10 đến 128 ký tự."},400);
+   const pass=String(b.password||"");if(pass.length<6||pass.length>128)return reply({error:"Mật khẩu mới cần từ 6 đến 128 ký tự."},400);
    const salt=hex(random(16)),hash=await derive(pass,salt),session=await digest(tokenFrom(request));
    await env.DB.prepare("UPDATE accounts SET password_hash=?,salt=?,must_change_password=0 WHERE id=?").bind(hash,salt,current.id).run();
    await env.DB.prepare("DELETE FROM account_sessions WHERE account_id=? AND token_hash<>?").bind(current.id,session).run();
    return reply({ok:true,user:{...current,must_change_password:0}});
   }
   const username=String(b.username||"").trim().toLowerCase(),pass=String(b.password||"");
-  if(["register","login"].includes(b.action)){if(!/^[a-z0-9_]{3,24}$/.test(username))return reply({error:"Tên đăng nhập cần 3–24 ký tự: chữ thường, số hoặc _."},400);if(pass.length<10||pass.length>128)return reply({error:"Mật khẩu cần từ 10 đến 128 ký tự."},400)}
+  if(["register","login"].includes(b.action)){if(!/^[a-z0-9_]{3,24}$/.test(username))return reply({error:"Tên đăng nhập cần 3–24 ký tự: chữ thường, số hoặc _."},400);if(pass.length<6||pass.length>128)return reply({error:"Mật khẩu cần từ 6 đến 128 ký tự."},400)}
   let account;
   if(b.action==="register"){
    const inviteCode=String(b.inviteCode||"").trim().toLowerCase();
