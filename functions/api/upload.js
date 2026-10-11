@@ -1,4 +1,5 @@
 const HEADERS={"Content-Type":"application/json; charset=utf-8","Cache-Control":"no-store"};
+const DAILY_UPLOAD_LIMIT=10;
 const json=(data,status=200)=>new Response(JSON.stringify(data),{status,headers:HEADERS});
 
 async function accountFor(request,db){
@@ -6,6 +7,21 @@ async function accountFor(request,db){
  if(!token)return null;
  const hash=Array.from(new Uint8Array(await crypto.subtle.digest("SHA-256",new TextEncoder().encode(token)))).map(x=>x.toString(16).padStart(2,"0")).join("");
  return db.prepare("SELECT s.account_id,a.must_change_password FROM account_sessions s JOIN accounts a ON a.id=s.account_id WHERE s.token_hash=? AND s.expires_at>?").bind(hash,Math.floor(Date.now()/1000)).first();
+}
+
+async function reserveDailyUpload(db,accountId,day){
+ await db.prepare("CREATE TABLE IF NOT EXISTS image_upload_limits (account_id TEXT PRIMARY KEY, upload_day TEXT NOT NULL, daily_count INTEGER NOT NULL DEFAULT 0)").run();
+ return db.prepare(
+  "INSERT INTO image_upload_limits (account_id,upload_day,daily_count) VALUES(?,?,1) " +
+  "ON CONFLICT(account_id) DO UPDATE SET " +
+  "daily_count=CASE WHEN image_upload_limits.upload_day=excluded.upload_day THEN image_upload_limits.daily_count+1 ELSE 1 END, " +
+  "upload_day=excluded.upload_day " +
+  "WHERE image_upload_limits.upload_day<>excluded.upload_day OR image_upload_limits.daily_count<?"
+ ).bind(accountId,day,DAILY_UPLOAD_LIMIT).run();
+}
+
+async function releaseDailyUpload(db,accountId,day){
+ await db.prepare("UPDATE image_upload_limits SET daily_count=MAX(daily_count-1,0) WHERE account_id=? AND upload_day=?").bind(accountId,day).run();
 }
 
 export async function onRequestPost({request,env}){
@@ -17,19 +33,31 @@ export async function onRequestPost({request,env}){
   if(account.must_change_password)return json({error:"Hãy đổi mật khẩu tạm trước khi tải ảnh lên."},403);
 
   const form=await request.formData(),file=form.get("image");
-  if(!(file instanceof File)||!file.size)return json({error:"Chọn ảnh trước khi tải lên."},400);
+  if(!(file instanceof File)||!file.size)return json({error:"Chọn ảnh trước khi tải ảnh lên."},400);
   const types=new Set(["image/jpeg","image/png","image/webp"]);
   if(!types.has(file.type))return json({error:"Chỉ nhận ảnh JPG, PNG hoặc WebP."},415);
   if(file.size>150_000)return json({error:"Ảnh sau khi nén cần nhỏ hơn 150 KB."},413);
 
+  const day=new Date(Date.now()+7*60*60*1000).toISOString().slice(0,10);
+  const reservation=await reserveDailyUpload(env.DB,String(account.account_id),day);
+  if(reservation.meta?.changes===0){
+   return json({error:"Tài khoản đã đạt giới hạn 10 ảnh hôm nay. Hạn mức sẽ làm mới lúc 00:00 giờ Việt Nam."},429);
+  }
+
   const id=crypto.randomUUID();
-  await env.IMAGES.put("images/"+id,file.stream(),{
-   httpMetadata:{contentType:file.type},
-   customMetadata:{ownerId:String(account.account_id)}
-  });
+  try{
+   await env.IMAGES.put("images/"+id,file.stream(),{
+    httpMetadata:{contentType:file.type},
+    customMetadata:{ownerId:String(account.account_id)}
+   });
+  }catch(error){
+   try{await releaseDailyUpload(env.DB,String(account.account_id),day);}
+   catch(releaseError){console.error("Could not release image upload quota:",releaseError);}
+   throw error;
+  }
   return json({ok:true,url:"/api/image?id="+id},201);
  }catch(error){
   console.error("Image upload:",error);
-  return json({error:"Không tải được ảnh lên R2. Hãy kiểm tra binding IMAGES."},500);
+  return json({error:"Không tải được ảnh lên R2. Hãy kiểm tra cấu hình hoặc thử lại."},500);
  }
 }
